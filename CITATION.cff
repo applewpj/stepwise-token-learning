@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this code or the released loss matrices, please cite the paper."
+title: "token-learning-spectrum"
+type: software
+authors:
+  - family-names: Wang
+    given-names: Pingjie
+  - family-names: Hu
+    given-names: Zechen
+  - family-names: Yang
+    given-names: Peiru
+  - family-names: Guo
+    given-names: Fu
+  - family-names: Zhang
+    given-names: Debing
+year: 2026
+license: MIT
+repository-code: "https://github.com/applewpj/token-learning-spectrum"
+preferred-citation:
+  type: article
+  title: "Smooth Scaling Laws Hide Stepwise Token Learning"
+  authors:
+    - family-names: Wang
+      given-names: Pingjie
+    - family-names: Hu
+      given-names: Zechen
+    - family-names: Yang
+      given-names: Peiru
+    - family-names: Guo
+      given-names: Fu
+    - family-names: Zhang
+      given-names: Debing
+  year: 2026

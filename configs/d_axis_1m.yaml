@@ -1,0 +1,66 @@
+input:
+  losses_npz: examples/d_axis_1m/losses.npz
+  axis_name: data scale (B tokens)
+
+output:
+  dir: runs/d_axis_1m
+  reuse_cache: true
+
+runtime:
+  mean_curve_chunk_size: 32768
+
+fit:
+  mode: plot
+  epochs: 10000
+  lr: 0.05
+  chunk_size: 1000000
+  device: cuda
+  lambda_init: 0.1
+  t_div: 1.0
+  max_grad_norm: null
+  log_every: 1000
+  constrain_sigmoid:
+    quantile: 0.5
+    constrain_t_start:
+      enabled: true
+      mode: in_range
+    constrain_t_end:
+      enabled: false
+      mode: in_range
+  seed: 1234
+
+token_examples:
+  tau_bins: 10
+  samples_per_bin: 5
+  binning: quantile
+  seed: 1234
+  min_r2: 0.0
+  direction: down
+  min_delta: null
+
+filters:
+  mode: plot
+  min_r2: 0.0
+  min_lambda: 0.2
+
+spectrum:
+  bins: 40
+  binning: uniform
+  curve: pos_mass
+
+pulse:
+  tau_bins: 40
+  binning: uniform
+  align_to_tau: false
+  offset_grid_points: 999
+  chunk_size: 50000
+
+rate:
+  normalize_by_axis: true
+  plot_loglog: true
+
+reconstruction:
+  dense_points: 999
+  tau_range_for_g_mean: [0, 34]
+  denominator: 1000000
+  chunk_size: 50000

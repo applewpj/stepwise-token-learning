@@ -1,0 +1,43 @@
+output:
+  dir: loss_acquisition/llm_pretraining_sglang/runs/hf_smollm2_smoke
+
+data:
+  source: huggingface
+  dataset: roneneldan/TinyStories
+  split: validation
+  text_field: text
+  load_kwargs:
+    streaming: true
+  limit: 4
+  prepared_jsonl: loss_acquisition/llm_pretraining_sglang/data/hf_smollm2_smoke/validation.jsonl
+  overwrite: false
+
+model:
+  path: HuggingFaceTB/SmolLM2-135M
+  tokenizer: HuggingFaceTB/SmolLM2-135M
+  trust_remote_code: false
+
+checkpoints:
+  - name: step_0
+    axis_value: 0
+    model: HuggingFaceTB/SmolLM2-135M
+  - name: step_1
+    axis_value: 1
+    model: HuggingFaceTB/SmolLM2-135M
+
+score:
+  axis_name: training step
+  batch_size: 2
+  limit: 4
+  max_new_tokens: 0
+  temperature: 0.0
+
+sglang:
+  tp_size: 1
+  model_type: llama
+  disable_cuda_graph: true
+  mem_fraction_static: 0.35
+
+build:
+  enabled: true
+  out: loss_acquisition/llm_pretraining_sglang/runs/hf_smollm2_smoke/losses.npz

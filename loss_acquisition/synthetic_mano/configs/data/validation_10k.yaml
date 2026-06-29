@@ -1,0 +1,22 @@
+dataset: mano
+is_validation: true
+
+dataset_config:
+  lens: {1: 0.1, 2: 0.1, 3: 0.1, 4: 0.1, 5: 0.1, 6: 0.1, 7: 0.1, 8: 0.1, 9: 0.1, 10: 0.1}
+
+seed_generation:
+  mode: incremental
+  base_seed: 0
+  length: 10000
+  repeat: 1
+  shuffle_seed: 42
+  validation_start_seed: 1000000000000
+
+output:
+  dir: loss_acquisition/synthetic_mano/runs/mano_51m/data/validation_10k
+  nchunks: 1
+  include_seed: true
+
+metadata:
+  name: validation_10k
+  notes: compatible with the original PhysicsLM Mano validation_10k seed config

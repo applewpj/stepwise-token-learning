@@ -1,0 +1,92 @@
+name: "mano_5120w_baseline_bs128"
+steps: 400000
+seed: 777
+
+optim:
+  lr: 3e-5
+  warmup: 100
+  lr_min_ratio: 0.000001
+  clip: 1
+  scheduler: constant
+
+distributed:
+  fsdp_type: full_shard
+  compile: false
+  model_dtype: bf16
+  matmul_allow_tf32: false
+  selective_activation_checkpointing: true
+  tp_size: 1
+
+model:
+  dim: 512
+  n_layers: 8
+  n_heads: 8
+  rope_dim: 16
+  rope_theta: 10000.0
+
+data:
+  root_dir: loss_acquisition/synthetic_mano/runs/mano_51m/data/incremental_5120w
+  sources:
+    mano: 1.0
+  batch_size: 128
+  prefetch_size: 100
+  seq_len: 64
+  n_views: 2
+  load_async: true
+  add_bos: true
+  add_eos: true
+  sequential_sources: true
+  shuffle_batches: false
+  use_packing: false
+  tokenizer:
+    name: mock
+  loss_mask:
+    enabled: true
+
+profiling:
+  run: false
+
+checkpoint:
+  dump:
+    every: 5000
+    keep: 100
+  eval:
+    every: 100
+    keep: 1
+  init_ckpt_path: null
+
+optim_metrics:
+  save: false
+
+logging:
+  freq: 10
+  log_layer_grad_norm: true
+  wandb:
+    project: "physics_lm"
+    entity: null
+    tags: ["mano", "synthetic"]
+    group: "mano_experiments"
+    notes: "Training on Mano synthetic arithmetic dataset"
+    mode: "online"
+    save_code: true
+    tensorboard: false
+
+eval:
+  generator:
+    max_tokens: 1024
+    dtype: bf16
+    temperature: 1.0
+    top_p: 0.95
+  harness: null
+  validation:
+    max_steps: 100
+    use_val_from_train_src: false
+    root_dir: loss_acquisition/synthetic_mano/runs/mano_51m/data/validation_10k
+  mano_eval:
+    enabled: true
+    val_file: loss_acquisition/synthetic_mano/runs/mano_51m/data/validation_10k/mano/mano.val.jsonl
+    value_mod: 23
+    max_samples: null
+    batch_size: 32
+
+dump_dir: loss_acquisition/synthetic_mano/runs/mano_51m/outputs/${name}

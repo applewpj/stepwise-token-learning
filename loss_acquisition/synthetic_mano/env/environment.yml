@@ -1,0 +1,32 @@
+name: token-learning-spectrum-mano
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      # Known working stack for the PhysicsLM/Lingua Mano trainer.
+      # If these wheels are not available on your platform, install a matching
+      # torch/xformers CUDA pair from the official PyTorch and xFormers wheels.
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.10.0
+      - xformers==0.0.35
+      - triton==3.6.0
+      - numpy==2.4.2
+      - omegaconf==2.3.0
+      - msgspec==0.20.0
+      - rouge-score==0.1.2
+      - sacrebleu==2.6.0
+      - sentencepiece==0.2.1
+      - tiktoken==0.12.0
+      - blobfile==3.2.0
+      - wandb==0.25.0
+      - viztracer==1.1.1
+      - lm-eval==0.4.11
+      - scipy==1.17.1
+      - pynvml==13.0.1
+      - nvidia-ml-py==13.590.48
+      - datatrove==0.9.0
+      - orjson==3.11.7
+      - matplotlib==3.10.8
+      - pyyaml==6.0.3

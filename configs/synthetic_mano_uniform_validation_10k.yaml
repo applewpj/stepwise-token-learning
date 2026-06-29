@@ -1,0 +1,76 @@
+input:
+  losses_npz: examples/synthetic_mano_uniform_validation_10k/losses.npz
+  axis_name: training step
+
+output:
+  dir: runs/synthetic_mano_uniform_validation_10k
+  reuse_cache: true
+
+runtime:
+  mean_curve_chunk_size: 50000
+
+fit:
+  epochs: 500
+  lr: 0.1
+  chunk_size: 2048
+  device: cpu
+  lambda_init_scaled: 10.0
+  edge_points: 3
+  constrain_tau: false
+  fixed_start: 3.1354942159291497
+  fixed_end: 0.0
+  step_mean_loss_weight: 1.0
+  seed: 1234
+
+token_examples:
+  tau_bins: 10
+  samples_per_bin: 5
+  seed: 1234
+  min_r2: 0.8
+  label_mean_window: 3
+  title_field: question
+  max_title_chars: 52
+
+labels:
+  field: difficulty
+  prefix: L
+  plot_grouped_loss: true
+  plot_token_examples_by_label: true
+  include_overall: true
+
+label_examples:
+  enabled: true
+  use_filtered_mask: false
+  samples_per_label: 5
+  max_labels: 10
+  min_r2: 0.8
+  label_mean_window: 3
+  max_title_chars: 52
+
+filters:
+  require_positive_delta: true
+  min_abs_delta: 0.01
+  min_r2: 0.0
+  tau_min: 5000
+  tau_max: 405000
+
+spectrum:
+  bins: 301
+  binning: uniform
+  curve: pos_mass
+  range: [5000, 405000]
+
+pulse:
+  tau_bins: 40
+  binning: uniform
+  tau_range: [5000, 405000]
+  align_to_tau: false
+  offset_grid_points: 401
+  chunk_size: 50000
+
+rate:
+  normalize_by_axis: false
+
+reconstruction:
+  dense_points: 401
+  chunk_size: 50000

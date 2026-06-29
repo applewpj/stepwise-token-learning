@@ -1,0 +1,53 @@
+version: 1
+repo_type: dataset
+recommended_repo_name: token-learning-spectrum-examples
+description: Public loss matrices for reproducing Token Learning Spectrum figures.
+
+files:
+  - id: step_axis_1m
+    title: T axis, 1M validation tokens
+    local_path: examples/step_axis_1m/losses.npz
+    hf_path: examples/step_axis_1m/losses.npz
+    config: configs/step_axis_1m.yaml
+    size_bytes: 196658576
+    sha256: ebe6fa0118de041acb1fbb10dc568a50b25c335d5bd5da8f9c1d52eca7059b8e
+    loss_matrix_shape: [1000000, 54]
+    axis_name: training step
+    axis_min: 15000.0
+    axis_max: 71000.0
+
+  - id: d_axis_1m
+    title: D axis, 1M validation tokens
+    local_path: examples/d_axis_1m/losses.npz
+    hf_path: examples/d_axis_1m/losses.npz
+    config: configs/d_axis_1m.yaml
+    size_bytes: 182973827
+    sha256: 632aa2c343a9308d66e5b4a4c7a12d6166ee12fa70cd02d895923381733761f3
+    loss_matrix_shape: [1000000, 50]
+    axis_name: data scale (B tokens)
+    axis_min: 1.195900928
+    axis_max: 34.6619904
+
+  - id: m_axis_1m
+    title: M axis, 1M validation tokens
+    local_path: examples/m_axis_1m/losses.npz
+    hf_path: examples/m_axis_1m/losses.npz
+    config: configs/m_axis_1m.yaml
+    size_bytes: 219348775
+    sha256: 8bc614d1a5111d807fe4568cdfda555b420a3fcc8f934e9598cb25cbf49bffcf
+    loss_matrix_shape: [1000000, 60]
+    axis_name: model scale (GFLOPs/token)
+    axis_min: 0.416082432
+    axis_max: 4.998660096
+
+  - id: synthetic_mano_uniform_validation_10k
+    title: Synthetic Mano uniform validation, 10K samples
+    local_path: examples/synthetic_mano_uniform_validation_10k/losses.npz
+    hf_path: examples/synthetic_mano_uniform_validation_10k/losses.npz
+    config: configs/synthetic_mano_uniform_validation_10k.yaml
+    size_bytes: 1506854
+    sha256: 91bcb0aaf1d29102e822a3b17ccca4d5526d067c78f9ab17cc4bbe1f93a12acd
+    loss_matrix_shape: [10000, 80]
+    axis_name: training step
+    axis_min: 5000.0
+    axis_max: 400000.0

@@ -1,0 +1,14 @@
+.pytest_cache/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+runs/
+memory.md
+loss_acquisition/synthetic_mano/runs/
+loss_acquisition/llm_pretraining_sglang/runs/
+examples/*/losses.npz
+loss_acquisition/llm_pretraining_sglang/data/**/*.jsonl
+!loss_acquisition/llm_pretraining_sglang/data/hf_smollm2_smoke/validation.jsonl

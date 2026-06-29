@@ -1,0 +1,26 @@
+output:
+  dir: loss_acquisition/synthetic_mano/runs/mano_51m
+
+data:
+  generate: true
+  overwrite: false
+  root_dir: loss_acquisition/synthetic_mano/runs/mano_51m/data
+  train_name: incremental_5120w
+  validation_name: validation_10k
+  train_seed_config: loss_acquisition/synthetic_mano/configs/data/incremental_5120w.yaml
+  validation_seed_config: loss_acquisition/synthetic_mano/configs/data/validation_10k.yaml
+  log_every_samples: 1000000
+
+train:
+  enabled: true
+  config_template: loss_acquisition/synthetic_mano/configs/physicslm/mano_5120w_baseline_bs128.yaml
+  config_out: loss_acquisition/synthetic_mano/runs/mano_51m/train_config.yaml
+  dump_dir: loss_acquisition/synthetic_mano/runs/mano_51m/outputs/mano_5120w_baseline_bs128
+
+score:
+  enabled: true
+  checkpoint_dir: loss_acquisition/synthetic_mano/runs/mano_51m/outputs/mano_5120w_baseline_bs128/checkpoints
+  validation_file: loss_acquisition/synthetic_mano/runs/mano_51m/data/validation_10k/mano/mano.val.jsonl
+  batch_size: 32
+  value_mod: 23
+  axis_name: training step

@@ -1,5 +1,7 @@
 """Public API for token-learning-spectrum."""
 
+__version__ = "0.1.0"
+
 from tokenlearning.types import LossMatrix, TokenEventFit
 from tokenlearning.io.loss_matrix import load_loss_npz, save_loss_npz
 from tokenlearning.core.fitting import fit_token_events
@@ -12,6 +14,7 @@ from tokenlearning.core.spectrum import (
 )
 
 __all__ = [
+    "__version__",
     "LossMatrix",
     "TokenEventFit",
     "load_loss_npz",

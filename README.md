@@ -40,8 +40,8 @@ data-scale D, and model-scale M axes.</em></p>
 ## TL;DR
 
 - A contextualized token is often learned through a localized, sigmoid-like
-  loss transition characterized by its learning time `tau`.
-- The distribution of learning times, `p(tau)`, is heavy-tailed and largely
+  loss transition characterized by its learning time $\tau$.
+- The distribution of learning times, $p(\tau)$, is heavy-tailed and largely
   determines the smooth power-law decay of aggregate loss.
 - This release provides the analysis package, public loss matrices, configs,
   and acquisition paths needed to study the phenomenon across the `T`, `D`,
@@ -49,19 +49,25 @@ data-scale D, and model-scale M axes.</em></p>
 
 ## Method at a Glance
 
-Given a token-level loss matrix measured along a scaling axis `a`, the core
+Given a token-level loss matrix measured along a scaling axis $a$, the core
 package fits each contextualized token with a localized learning event:
 
-```text
-ell_i(a) ~= ell_post_i + Delta_i * [1 - sigmoid(lambda_i * (a - tau_i))]
-```
+$$
+\ell_i(a)
+\approx \ell_i^{\mathrm{post}}
++ \Delta_i \left[1-\sigma\!\left(\lambda_i(a-\tau_i)\right)\right],
+$$
 
-It then estimates the learning-time spectrum `p(tau)`, binned learning pulses
-`g(t, tau)`, and the spectrum-dominated reconstruction:
+where $\sigma(z)=1/(1+e^{-z})$. It then estimates the learning-time spectrum
+$p(\tau)$, the centered learning pulse $g$, and the spectrum-dominated
+reconstruction:
 
-```text
--dL/da ~= (p * g)(a)
-```
+$$
+L'(a)
+:= -\frac{\mathrm{d}L(a)}{\mathrm{d}a}
+\approx \int p(\tau)\,g(a-\tau)\,\mathrm{d}\tau
+= (p*g)(a).
+$$
 
 ![Representative learned, early-learning, late-learning, and unlearned token loss trajectories and their learning pulses.](assets/token_learning_events.png)
 

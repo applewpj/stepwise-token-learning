@@ -9,6 +9,7 @@ loss.</strong></p>
   <a href="https://openreview.net/pdf?id=THZDVZArRH"><img src="https://img.shields.io/badge/Paper-PDF-B31B1B?style=flat-square&amp;logo=adobeacrobatreader&amp;logoColor=white" alt="Paper PDF"></a>
   <a href="https://openreview.net/forum?id=THZDVZArRH"><img src="https://img.shields.io/badge/OpenReview-Discussion-8C1B13?style=flat-square" alt="OpenReview"></a>
   <a href="https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"><img src="https://img.shields.io/badge/Hugging_Face-Dataset-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=black" alt="Hugging Face Dataset"></a>
+  <a href="https://github.com/applewpj/token-learning-spectrum/actions/workflows/ci.yml"><img src="https://github.com/applewpj/token-learning-spectrum/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2EA44F?style=flat-square" alt="MIT License"></a>
 </p>
 

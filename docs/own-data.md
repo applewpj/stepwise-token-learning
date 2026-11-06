@@ -2,7 +2,9 @@
 
 The analysis package is agnostic to the model, tokenizer, and source of the
 losses. It requires the loss of the same contextualized token rows measured at
-multiple ordered points along one scaling axis.
+multiple ordered points along one scaling axis: checkpoints of one run
+(training steps), runs with different data budgets, or models of different
+sizes.
 
 ## NPZ Schema
 
@@ -43,61 +45,31 @@ Before fitting, check that:
 - non-finite or missing loss values have been handled explicitly;
 - token loss uses the same reduction and vocabulary convention at every point.
 
-## Minimal Configuration
+## Configuration
 
-Save the following as `configs/my_analysis.yaml` and adjust the input path,
-device, and fit settings:
-
-```yaml
-input:
-  losses_npz: path/to/my_losses.npz
-  axis_name: training step
-
-output:
-  dir: runs/my_analysis
-  reuse_cache: true
-
-fit:
-  epochs: 2000
-  lr: 0.03
-  chunk_size: 8192
-  device: cuda
-  constrain_tau: true
-  seed: 1234
-
-filters:
-  require_positive_delta: true
-  min_abs_delta: 0.01
-  min_r2: 0.0
-
-spectrum:
-  bins: 80
-  binning: uniform
-  curve: pos_mass
-
-pulse:
-  tau_bins: 40
-  binning: uniform
-  align_to_tau: false
-  offset_grid_points: 401
-  chunk_size: 50000
-
-rate:
-  normalize_by_axis: true
-
-reconstruction:
-  dense_points: 401
-  chunk_size: 50000
-```
-
-Run:
+Start from [`configs/template.yaml`](../configs/template.yaml), which has
+generic settings, rather than from a paper config, which hard-codes
+axis-specific values:
 
 ```bash
-tokenlearning-run --config configs/my_analysis.yaml
+cp configs/template.yaml configs/mine.yaml      # set input.losses_npz and output.dir
+tokenlearning run --config configs/mine.yaml --max-tokens 50000   # first look at a random subset
+tokenlearning run --config configs/mine.yaml    # all rows
 ```
 
-Use `device: cpu` for small matrices. For large matrices, tune `chunk_size`
-according to available device memory.
+`fit.device: auto` uses CUDA when it is available. Flags such as `--device`,
+`--epochs`, `--max-tokens`, and `--output-dir` override the file for one run,
+and each run directory keeps the exact `config.yaml` it used. Settings worth
+revisiting for a new matrix:
+
+- `fit.epochs` and `fit.lr`: check that the per-token `r2` distribution has
+  stopped improving;
+- `fit.chunk_size`: rows fitted together. Larger chunks need more memory;
+- `filters`: which events count, e.g. a minimum loss drop `min_abs_delta`;
+- `spectrum.bins`: the histogram resolution of the learning-time spectrum;
+- `reconstruction.tau_range_for_g_mean`: the learning-time range used to
+  estimate the shared pulse. Exclude events at the edges of the axis, which are
+  only partly observed.
 
 ## Python API
 
@@ -130,20 +102,22 @@ pulses = compute_binned_learning_pulses(
 
 ## Interpreting the Outputs
 
-- `tau`: center of the fitted token-level transition along the selected axis.
+- `tau`: learning time, the center of the fitted transition, in axis units.
 - `lambda_`: transition sharpness in inverse axis units.
-- `delta`: fitted loss decrease from the initial to final plateau.
+- `delta`: loss reduction from the initial to the final plateau.
 - `r2`: per-token goodness of fit.
-- `learning_time_spectrum.png`: distribution of selected learning events.
-- `binned_learning_pulses.png`: average localized loss-decrease pulses grouped
-  by learning time.
-- `rate_reconstruction.png`: comparison between empirical, sigmoid-implied, and
-  spectrum-dominated aggregate loss decrease rates.
+- `learning_time_spectrum.png`: the learning-time spectrum of the selected
+  tokens, overlaid on the empirical loss derivative.
+- `binned_learning_pulses.png`: mean learning pulses of tokens grouped by
+  learning time.
+- `rate_reconstruction.png`: the empirical, sigmoid-implied, and
+  spectrum-dominated loss derivatives.
 
-The fitted event is a compact description of the dominant transition, not a
-claim that every token trajectory is exactly sigmoid. Inspect filtering
-sensitivity, poor-fit cases, axis-boundary events, and alternative bin counts
-before drawing conclusions from a new dataset.
+[`concepts.md`](concepts.md) maps every output to the paper's definitions. The
+fitted event is a compact description of the dominant transition, not a claim
+that every token trajectory is exactly sigmoid. Inspect filtering sensitivity,
+poor-fit cases, axis-boundary events, and alternative bin counts before drawing
+conclusions from a new dataset.
 
 ## Acquiring Losses
 

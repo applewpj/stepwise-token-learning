@@ -12,6 +12,7 @@ from matplotlib import font_manager
 from matplotlib.colors import Normalize
 from matplotlib.lines import Line2D
 from matplotlib.cm import ScalarMappable
+from matplotlib.ticker import FuncFormatter, MaxNLocator
 import numpy as np
 
 from tokenlearning.core.sigmoid import sigmoid_loss
@@ -73,6 +74,20 @@ def style_axis(ax: plt.Axes, *, facecolor: str = AXES_FACE_COLOR) -> None:
     for spine in ax.spines.values():
         spine.set_linewidth(0.75)
         spine.set_color(SPINE_COLOR)
+
+
+def _compact_number(value: float, _pos: int | None = None) -> str:
+    magnitude = abs(value)
+    if magnitude >= 1e6:
+        return f"{value / 1e6:g}M"
+    if magnitude >= 1e3:
+        return f"{value / 1e3:g}k"
+    return f"{value:g}"
+
+
+def _compact_x_ticks(ax: plt.Axes) -> None:
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+    ax.xaxis.set_major_formatter(FuncFormatter(_compact_number))
 
 
 def padded_limits(y: np.ndarray, frac: float = 0.06) -> tuple[float, float]:
@@ -205,9 +220,9 @@ def plot_mean_loss(
     configure_plot_style()
     fig, ax = plt.subplots(figsize=(7.2, 4.4), constrained_layout=True)
     if raw_mean is not None:
-        ax.plot(axis_values, raw_mean, color=LOSS_COLOR, linewidth=2.3, label="Mean validation loss")
+        ax.plot(axis_values, raw_mean, color=LOSS_COLOR, linewidth=2.3, label="Empirical loss")
     if sigmoid_mean is not None:
-        ax.plot(axis_values, sigmoid_mean, color=FIT_COLOR, linewidth=2.1, linestyle="--", label="Mean sigmoid fit")
+        ax.plot(axis_values, sigmoid_mean, color=FIT_COLOR, linewidth=2.1, linestyle="--", label="Sigmoid-implied loss")
     ax.set_title("Mean validation loss")
     ax.set_xlabel(axis_name)
     ax.set_ylabel("Loss")
@@ -324,6 +339,7 @@ def plot_token_examples(
             ax = axes[row, col]
             ax.tick_params(labelsize=7.5, length=2.5, width=0.7)
             style_axis(ax)
+            _compact_x_ticks(ax)
             if col >= len(sampled_by_bin[row]):
                 ax.axis("off")
                 continue
@@ -360,7 +376,7 @@ def plot_token_examples(
                 ax.set_xlabel(axis_name)
 
     handles = [
-        Line2D([0], [0], color=LOSS_COLOR, linewidth=1.6, label="True loss"),
+        Line2D([0], [0], color=LOSS_COLOR, linewidth=1.6, label="Empirical loss"),
         Line2D([0], [0], color=FIT_COLOR, linewidth=1.4, linestyle="--", label="Sigmoid fit"),
     ]
     if label_values is not None and loss_matrix is not None:
@@ -443,6 +459,7 @@ def plot_token_examples_by_label(
             ax = axes[row, col]
             ax.tick_params(labelsize=7.5, length=2.5, width=0.7)
             style_axis(ax)
+            _compact_x_ticks(ax)
             if col >= len(chosen):
                 ax.axis("off")
                 continue
@@ -472,7 +489,7 @@ def plot_token_examples_by_label(
                 ax.set_xlabel(axis_name)
 
     handles = [
-        Line2D([0], [0], color=LOSS_COLOR, linewidth=1.6, label="True loss"),
+        Line2D([0], [0], color=LOSS_COLOR, linewidth=1.6, label="Empirical loss"),
         Line2D([0], [0], color=FIT_COLOR, linewidth=1.4, linestyle="--", label="Sigmoid fit"),
         Line2D([0], [0], color=MEAN_COLOR, linewidth=1.4, linestyle="--", label="Mean loss of label"),
     ]
@@ -521,10 +538,10 @@ def plot_rate_vs_spectrum(
     configure_plot_style()
     p_tau, _ = _select_spectrum_curve(spectrum, curve)
     fig, ax = plt.subplots(figsize=(7.2, 4.4), constrained_layout=True)
-    ax.plot(empirical_axis, empirical_rate, color=LOSS_COLOR, linewidth=2.2, label="True loss decrease rate")
-    ax.set_title("Loss decrease rate vs. learning-time spectrum")
+    ax.plot(empirical_axis, empirical_rate, color=LOSS_COLOR, linewidth=2.2, label="Empirical loss derivative")
+    ax.set_title("Loss derivative vs. learning-time spectrum")
     ax.set_xlabel(axis_name)
-    ax.set_ylabel("Loss decrease rate", color=LOSS_COLOR)
+    ax.set_ylabel("Loss derivative", color=LOSS_COLOR)
     ax.tick_params(axis="y", labelcolor=LOSS_COLOR)
     ax.set_ylim(*padded_limits(empirical_rate, frac=0.08))
     style_axis(ax)
@@ -548,7 +565,7 @@ def plot_rate_vs_spectrum(
         spine.set_color(SPINE_COLOR)
     ax.legend(
         handles=[
-            Line2D([0], [0], color=LOSS_COLOR, linewidth=2.2, label="True loss decrease rate"),
+            Line2D([0], [0], color=LOSS_COLOR, linewidth=2.2, label="Empirical loss derivative"),
             Line2D([0], [0], color=SPECTRUM_COLOR, linewidth=2.2, linestyle="--", label=r"Learning-time spectrum $p(\tau)$"),
         ],
         frameon=False,
@@ -609,16 +626,16 @@ def plot_rate_reconstruction(
 
     if empirical_rate is not None:
         x_emp = empirical_axis if empirical_axis is not None else rate_axis
-        plot_curve(x_emp, empirical_rate, color=LOSS_COLOR, linewidth=2.1, label="True loss decrease rate")
+        plot_curve(x_emp, empirical_rate, color=LOSS_COLOR, linewidth=2.1, label="Empirical loss derivative")
         y_for_limits.append(np.asarray(empirical_rate, dtype=np.float64))
     if sigmoid_rate is not None:
         x_sig = sigmoid_axis if sigmoid_axis is not None else rate_axis
-        plot_curve(x_sig, sigmoid_rate, color=FIT_COLOR, linewidth=1.9, linestyle="--", label="Sigmoid-implied rate")
+        plot_curve(x_sig, sigmoid_rate, color=FIT_COLOR, linewidth=1.9, linestyle="--", label="Sigmoid-implied derivative")
         y_for_limits.append(np.asarray(sigmoid_rate, dtype=np.float64))
-    plot_curve(rate_axis, reconstructed_rate, color=SPECTRUM_COLOR, linewidth=2.3, linestyle="-.", label=r"$p(\tau)$ dominated rate")
-    ax.set_title("Loss decrease rate reconstruction" + (" (log-log)" if loglog else ""))
+    plot_curve(rate_axis, reconstructed_rate, color=SPECTRUM_COLOR, linewidth=2.3, linestyle="-.", label="Spectrum-dominated derivative")
+    ax.set_title("Loss derivative reconstruction" + (" (log-log)" if loglog else ""))
     ax.set_xlabel(axis_name)
-    ax.set_ylabel("Loss decrease rate")
+    ax.set_ylabel("Loss derivative")
     if loglog:
         positive = np.concatenate(
             [
@@ -656,9 +673,9 @@ def plot_reconstruction_summary(
 
     ax = axes[0]
     if raw_mean is not None:
-        ax.plot(axis_values, raw_mean, color=LOSS_COLOR, linewidth=2.3, label="Mean validation loss")
+        ax.plot(axis_values, raw_mean, color=LOSS_COLOR, linewidth=2.3, label="Empirical loss")
     if sigmoid_mean is not None:
-        ax.plot(axis_values, sigmoid_mean, color=FIT_COLOR, linewidth=2.1, linestyle="--", label="Mean sigmoid fit")
+        ax.plot(axis_values, sigmoid_mean, color=FIT_COLOR, linewidth=2.1, linestyle="--", label="Sigmoid-implied loss")
     ax.set_title("Mean validation loss")
     ax.set_xlabel(axis_name)
     ax.set_ylabel("Loss")
@@ -667,11 +684,11 @@ def plot_reconstruction_summary(
     ax = axes[1]
     if empirical_rate is not None:
         x_emp = empirical_axis if empirical_axis is not None else rate_axis_dense
-        ax.plot(x_emp, empirical_rate, color=LOSS_COLOR, linewidth=2.2, label="True loss decrease rate")
+        ax.plot(x_emp, empirical_rate, color=LOSS_COLOR, linewidth=2.2, label="Empirical loss derivative")
         ax.set_ylim(*padded_limits(empirical_rate, frac=0.08))
-    ax.set_title("Loss decrease rate vs. learning-time spectrum")
+    ax.set_title("Loss derivative vs. learning-time spectrum")
     ax.set_xlabel(axis_name)
-    ax.set_ylabel("Loss decrease rate", color=LOSS_COLOR)
+    ax.set_ylabel("Loss derivative", color=LOSS_COLOR)
     ax.tick_params(axis="y", labelcolor=LOSS_COLOR)
     p_tau, _ = _select_spectrum_curve(spectrum, spectrum_curve)
     ax2 = ax.twinx()
@@ -693,7 +710,7 @@ def plot_reconstruction_summary(
         spine.set_color(SPINE_COLOR)
     ax.legend(
         handles=[
-            Line2D([0], [0], color=LOSS_COLOR, linewidth=2.2, label="True loss decrease rate"),
+            Line2D([0], [0], color=LOSS_COLOR, linewidth=2.2, label="Empirical loss derivative"),
             Line2D([0], [0], color=SPECTRUM_COLOR, linewidth=2.2, linestyle="--", label=r"Learning-time spectrum $p(\tau)$"),
         ],
         frameon=False,
@@ -704,16 +721,16 @@ def plot_reconstruction_summary(
     y_for_limits = [np.asarray(reconstructed_rate_dense, dtype=np.float64)]
     if empirical_rate is not None:
         x_emp = empirical_axis if empirical_axis is not None else rate_axis_dense
-        ax.plot(x_emp, empirical_rate, color=LOSS_COLOR, linewidth=2.2, label="True loss decrease rate")
+        ax.plot(x_emp, empirical_rate, color=LOSS_COLOR, linewidth=2.2, label="Empirical loss derivative")
         y_for_limits.append(np.asarray(empirical_rate, dtype=np.float64))
     if sigmoid_rate is not None:
         x_sig = sigmoid_axis if sigmoid_axis is not None else rate_axis_dense
-        ax.plot(x_sig, sigmoid_rate, color=FIT_COLOR, linewidth=2.0, linestyle="--", label="Sigmoid-implied rate")
+        ax.plot(x_sig, sigmoid_rate, color=FIT_COLOR, linewidth=2.0, linestyle="--", label="Sigmoid-implied derivative")
         y_for_limits.append(np.asarray(sigmoid_rate, dtype=np.float64))
-    ax.plot(rate_axis_dense, reconstructed_rate_dense, color=SPECTRUM_COLOR, linewidth=2.4, linestyle="-.", label=r"$p(\tau)$ dominated rate")
-    ax.set_title("Loss decrease rate reconstruction")
+    ax.plot(rate_axis_dense, reconstructed_rate_dense, color=SPECTRUM_COLOR, linewidth=2.4, linestyle="-.", label="Spectrum-dominated derivative")
+    ax.set_title("Loss derivative reconstruction")
     ax.set_xlabel(axis_name)
-    ax.set_ylabel("Loss decrease rate")
+    ax.set_ylabel("Loss derivative")
     ax.set_ylim(*padded_limits(np.concatenate(y_for_limits), frac=0.08))
     ax.legend(frameon=False, loc="upper right")
 

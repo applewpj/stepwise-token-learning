@@ -1,109 +1,121 @@
-# Reproducing the Paper Results
+# Reproduction Notes
 
-This guide maps each public analysis artifact to the corresponding paper result.
-The release starts from contextualized-token loss matrices; it does not reproduce
-the private pretraining runs that generated the original checkpoints.
+The [README](../README.md#reproduce-the-paper) has the commands. This page
+records what each paper config does, what `--quick` changes, how the reference
+numbers were produced, and what the release does not cover.
 
-## Environment
+## Settings of the paper configs
 
-```bash
-git clone https://github.com/applewpj/token-learning-spectrum
-cd token-learning-spectrum
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[hf]"
-```
+| | [`step_axis_1m`](../configs/step_axis_1m.yaml) | [`d_axis_1m`](../configs/d_axis_1m.yaml) | [`m_axis_1m`](../configs/m_axis_1m.yaml) | [`synthetic_mano_uniform_validation_10k`](../configs/synthetic_mano_uniform_validation_10k.yaml) |
+| --- | --- | --- | --- | --- |
+| Paper result | Figure 3 | Figure 4 | Figure 5 | Appendix, uniform Mano |
+| Axis | training step, 15k–71k | data, 1.2B–34.7B tokens | model, 0.42–5.00 GFLOPs/token | training step, 5k–400k |
+| Matrix | 1,000,000 × 54 | 1,000,000 × 50 | 1,000,000 × 60 | 10,000 × 80 |
+| Fit | 10,000 epochs, lr 0.02 | 10,000 epochs, lr 0.05 | 10,000 epochs, lr 0.02 | 500 epochs, lr 0.1 |
+| Rows per chunk | 500,000 | 1,000,000 | 1,000,000 | 2,048 |
+| Event filter | drop if \|Δ\| < 0.3 and R² < 0.5 | drop if R² < 0 or λ < 0.2 | keep if loss SNR ≥ 0.2 | Δ ≥ 0.01 and 5k ≤ τ ≤ 405k |
+| Spectrum bins | 40 | 40 | 40 | 301 |
 
-The 1M-token T/D/M fits are configured for CUDA. The 10K-sample synthetic Mano
-example is configured for CPU and is the recommended installation smoke test.
+The T, D, and M configs use the paper's "plot-compatible" fit: Adam on all
+four sigmoid parameters of every token in a chunk at once, with a loss that
+adds the error of the chunk's mean curve to the per-token squared error.
+Because of that coupling, the chunk size belongs to the method. See
+[determinism](#determinism-and-tolerances) below.
 
-## Public Artifacts
+## What `--quick` changes
 
-| Paper result | Asset ID | Matrix shape | Axis range | Size |
-| --- | --- | ---: | --- | ---: |
-| Figure 3, training-step axis | `step_axis_1m` | 1,000,000 × 54 | 15,000–71,000 steps | 196,658,576 bytes |
-| Figure 4, data-scale axis | `d_axis_1m` | 1,000,000 × 50 | 1.196–34.662B tokens | 182,973,827 bytes |
-| Figure 5, model-scale axis | `m_axis_1m` | 1,000,000 × 60 | 0.416–4.999 GFLOPs/token | 219,348,775 bytes |
-| Synthetic Mano appendix analysis | `synthetic_mano_uniform_validation_10k` | 10,000 × 80 | 5,000–400,000 steps | 1,506,854 bytes |
+`--quick` fits a random subset of 50,000 rows (subset seed 0) for 2,000 epochs,
+with every other setting taken from the paper config. Two details keep the
+subset comparable to the full matrix:
 
-The authoritative paths and SHA256 checksums are stored in
-[`examples/manifest.yaml`](../examples/manifest.yaml). The download tool verifies
-every file before analysis.
+- The empirical loss derivative is always computed from the mean loss over
+  **all** one million rows, so the subset's spectrum is compared with the real
+  curve rather than with a noisier subset mean.
+- The paper configs normalize the reconstruction by the number of rows
+  (`reconstruction.denominator: 1000000`). With a subset, the pipeline rescales
+  this to the subset size, so the reconstruction stays on the same scale.
 
-## Quick Verification
+`--max-tokens N`, `--epochs E`, and `--seed S` give other subsets. They are
+reported as `custom` runs and are not checked against the reference.
 
-```bash
-python tools/download_examples.py \
-  --repo-id applewpj/token-learning-spectrum-examples \
-  --name synthetic_mano_uniform_validation_10k
+## Reference numbers
 
-tokenlearning-run \
-  --config configs/synthetic_mano_uniform_validation_10k.yaml
-```
+[`configs/reference_metrics.yaml`](../configs/reference_metrics.yaml) holds the
+four numbers that `tokenlearning reproduce` checks:
 
-Expected directory:
+| Key | Meaning | Tolerance |
+| --- | --- | --- |
+| `kept_fraction` | fraction of fitted tokens that pass the event filter | ± 0.02 |
+| `tau_median_filtered` | median learning time of the kept tokens, in axis units | ± 3% |
+| `mean_loss_r2` | R² of the sigmoid-implied mean loss against the measured mean loss (panels 3A, 4B, 5B) | ± 0.005 |
+| `sigmoid_rate_reconstruction_corr` | Pearson correlation of the spectrum-dominated and sigmoid-implied loss derivatives (panels 3D, 4C, 5C) | ± 0.02 |
+
+They were recorded on CPU (AMD EPYC 7K62, 16 vCPUs; Python 3.12, PyTorch
+2.15, NumPy 2.5) with `tools/record_reference_metrics.py` from runs of the
+unmodified configs.
+`metrics.json` additionally reports `rate_reconstruction_corr`, the correlation
+between the empirical and spectrum-dominated derivatives. It is not used as a
+check, because the empirical derivative is a finite difference of a noisy
+curve. Judge that agreement from `rate_reconstruction_loglog.png`, as in the
+paper.
+
+## Determinism and tolerances
+
+On one machine, a rerun gives identical numbers. We also refitted the Figure 3
+quick setting:
+
+- **With 4 instead of 8 CPU threads:** all four numbers were identical, and the
+  largest change in any token's learning time was 0.008 steps.
+- **With half the chunk size (25,000 instead of 50,000 rows):** the median
+  learning time moved by 2.2%, the mean-loss R² by 0.009, and the derivative
+  correlation by 0.013. Individual learning times moved by a median of
+  222 steps.
+
+The tolerances are therefore loose enough for hardware and thread-count
+differences, but a changed `chunk_size`, `epochs`, or `lr` can fail a check.
+That is intended: those settings are part of the fitting method.
+
+## Outputs
 
 ```text
-runs/synthetic_mano_uniform_validation_10k/
+runs/<id>/                      runs/<id>_quick/ with --quick
+├── config.yaml                 the exact settings of this run
+├── metrics.json                summary numbers, timings, subset, device
 ├── cache/
-│   ├── analysis_arrays.npz
-│   ├── filtered_mask.npy
-│   └── fit_params.npz
-├── figures/
-│   ├── binned_learning_pulses.png
-│   ├── learning_time_spectrum.png
-│   ├── mean_loss_by_difficulty.png
-│   ├── mean_loss_raw_vs_sigmoid.png
-│   ├── rate_reconstruction.png
-│   ├── token_examples_by_difficulty.png
-│   └── token_examples_by_tau_decile.png
-└── metrics.json
+│   ├── fit_params.npz          tau, lambda_, delta, start, end, r2, valid_mask per token
+│   ├── filtered_mask.npy       tokens that pass the event filter
+│   └── analysis_arrays.npz     spectrum, pulses, and the three loss derivatives
+└── figures/
+    ├── mean_loss_raw_vs_sigmoid.png
+    ├── binned_learning_pulses.png
+    ├── learning_time_spectrum.png
+    ├── rate_reconstruction.png
+    ├── rate_reconstruction_loglog.png
+    └── token_examples_by_tau_decile.png
 ```
 
-At minimum, verify that `metrics.json` reports:
+The synthetic run adds `mean_loss_by_difficulty.png` and
+`token_examples_by_difficulty.png`. [`concepts.md`](concepts.md) defines every
+array and figure.
 
-- `n_tokens: 10000`;
-- `axis_min: 5000.0` and `axis_max: 400000.0`;
-- finite `rate_reconstruction_corr` and `rate_reconstruction_mae`;
-- paths to all core figures.
+`cache/fit_params.npz` also stores a fingerprint of the fit settings. A rerun
+reuses the fit only when the fingerprint matches, so changing `epochs`, `lr`,
+`chunk_size`, or the subset always triggers a new fit.
 
-## T/D/M Analyses
+## What the release does not cover
 
-```bash
-python tools/download_examples.py \
-  --repo-id applewpj/token-learning-spectrum-examples \
-  --all
+The T, D, and M matrices are sanitized analysis inputs: they contain
+`axis_values`, `loss_matrix`, and `axis_name` only. Model code, weights,
+tokenizers, validation text, training-data composition, and checkpoint paths
+are not released. The release therefore reproduces the token-level analysis,
+but not:
 
-tokenlearning-run --config configs/step_axis_1m.yaml
-tokenlearning-run --config configs/d_axis_1m.yaml
-tokenlearning-run --config configs/m_axis_1m.yaml
-```
+- the pre-training runs, or panels 4A and 5A that show their training curves;
+- Figure 2, which compares three independent runs of the same model;
+- the data-reshaping experiments of Figures 6 and 7, which ran inside the
+  training stack. The learning times they use are the `tau` that this package
+  estimates.
 
-The outputs are written to `runs/step_axis_1m`, `runs/d_axis_1m`, and
-`runs/m_axis_1m`. Each run produces the same output contract as the synthetic
-example, except for label-conditioned Mano plots.
-
-The default configs preserve the public release settings used for the paper
-analysis:
-
-- per-token sigmoid fitting;
-- filtering of invalid or low-signal events;
-- a 40-bin learning-time spectrum for T/D/M;
-- binned learning pulses;
-- empirical, sigmoid-implied, and spectrum-dominated loss-rate curves.
-
-These analyses jointly fit one million token trajectories for 10,000 epochs and
-are not intended for CPU execution. Runtime and peak memory vary substantially
-with GPU model, CUDA/PyTorch build, and fit chunk size; no hardware-independent
-runtime estimate is claimed.
-
-## Reproduction Boundaries
-
-The public T/D/M matrices are sanitized analysis inputs. They preserve
-`axis_values`, `loss_matrix`, and `axis_name`, but omit private model code,
-weights, tokenizers, raw validation text, training-data composition, experiment
-registries, and checkpoint paths.
-
-Consequently, this repository supports reproduction of the token-event fitting,
-spectrum estimation, and loss-rate reconstruction from the released matrices.
-It does not support exact regeneration of the private pretraining checkpoints.
+Rows of the T, D, and M matrices cannot be mapped back to token strings. The
+synthetic Mano path is public end to end; see
+[`loss_acquisition/synthetic_mano/`](../loss_acquisition/synthetic_mano/).

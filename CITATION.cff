@@ -1,13 +1,15 @@
 cff-version: 1.2.0
 message: "If you use this code or the released loss matrices, please cite the paper."
-title: "Token Learning Spectrum"
+title: "Stepwise Token Learning"
 type: software
 version: "0.1.0"
-url: "https://github.com/applewpj/token-learning-spectrum"
+url: "https://applewpj.github.io/stepwise-token-learning/"
+repository-code: "https://github.com/applewpj/stepwise-token-learning"
 repository-artifact: "https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"
-abstract: "Code and public loss matrices for decomposing smooth scaling laws into token-level learning events, learning-time spectra, and spectrum-dominated loss-rate reconstructions."
+abstract: "Code and public loss matrices for decomposing smooth scaling laws into token-level learning events, learning-time spectra, and spectrum-dominated reconstructions of the loss derivative."
 keywords:
   - scaling laws
+  - learning-time spectrum
   - language modeling
   - token loss
   - learning dynamics
@@ -22,11 +24,9 @@ authors:
     given-names: Fu
   - family-names: Zhang
     given-names: Debing
-year: 2026
 license: MIT
-repository-code: "https://github.com/applewpj/token-learning-spectrum"
 preferred-citation:
-  type: article
+  type: conference-paper
   title: "Smooth Scaling Laws Hide Stepwise Token Learning"
   url: "https://openreview.net/forum?id=THZDVZArRH"
   authors:
@@ -40,5 +40,7 @@ preferred-citation:
       given-names: Fu
     - family-names: Zhang
       given-names: Debing
+  collection-title: "Advances in Neural Information Processing Systems"
+  conference:
+    name: "NeurIPS 2026"
   year: 2026
-  journal: "Advances in Neural Information Processing Systems"

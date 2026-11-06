@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "token-learning-spectrum"
 version = "0.1.0"
-description = "Token learning-time spectrum analysis for scaling curves."
+description = "Decompose smooth scaling laws into token-level learning events and learning-time spectra (NeurIPS 2026 Spotlight)."
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
@@ -15,12 +15,19 @@ authors = [
   {name = "Fu Guo"},
   {name = "Debing Zhang"},
 ]
-license = {file = "LICENSE"}
-keywords = ["scaling laws", "language modeling", "token loss", "learning dynamics"]
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = [
+  "scaling laws",
+  "learning-time spectrum",
+  "language modeling",
+  "token loss",
+  "learning dynamics",
+  "training dynamics",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -30,11 +37,13 @@ dependencies = [
   "pyyaml>=6.0",
   "matplotlib>=3.7",
   "torch>=2.0",
+  "huggingface_hub>=0.23",
 ]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=7.0",
+  "pyarrow>=14",
 ]
 hf = [
   "huggingface_hub>=0.23",
@@ -50,12 +59,13 @@ tokenlearning = "tokenlearning.cli:main"
 tokenlearning-run = "tokenlearning.cli:run_main"
 
 [project.urls]
-Homepage = "https://github.com/applewpj/token-learning-spectrum"
-Repository = "https://github.com/applewpj/token-learning-spectrum"
-Issues = "https://github.com/applewpj/token-learning-spectrum/issues"
+Homepage = "https://applewpj.github.io/stepwise-token-learning/"
+Repository = "https://github.com/applewpj/stepwise-token-learning"
+Issues = "https://github.com/applewpj/stepwise-token-learning/issues"
 Paper = "https://openreview.net/forum?id=THZDVZArRH"
 Dataset = "https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"
-Documentation = "https://github.com/applewpj/token-learning-spectrum/tree/main/docs"
+Documentation = "https://github.com/applewpj/stepwise-token-learning/tree/main/docs"
+Quickstart = "https://colab.research.google.com/github/applewpj/stepwise-token-learning/blob/main/notebooks/quickstart.ipynb"
 
 [tool.setuptools.packages.find]
 include = ["tokenlearning*"]

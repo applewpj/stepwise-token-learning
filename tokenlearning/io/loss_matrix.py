@@ -68,6 +68,7 @@ def save_fit_cache(
     fit: TokenEventFit,
     raw_loss_mean: np.ndarray | None = None,
     fitted_loss_mean: np.ndarray | None = None,
+    fit_settings: str | None = None,
 ) -> None:
     payload = fit.to_npz_payload()
     payload["axis_values"] = np.asarray(axis_values, dtype=np.float64)
@@ -75,8 +76,18 @@ def save_fit_cache(
         payload["raw_loss_mean"] = np.asarray(raw_loss_mean, dtype=np.float64)
     if fitted_loss_mean is not None:
         payload["fitted_loss_mean"] = np.asarray(fitted_loss_mean, dtype=np.float64)
+    if fit_settings is not None:
+        payload["fit_settings"] = np.asarray([fit_settings])
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path, **payload)
+
+
+def load_fit_settings(path: str | Path) -> str | None:
+    """Return the fit settings recorded in a fit cache, or None for caches written without them."""
+    with np.load(path) as data:
+        if "fit_settings" not in data.files:
+            return None
+        return str(np.asarray(data["fit_settings"]).reshape(-1)[0])
 
 
 def load_public_fit_cache(path: str | Path) -> tuple[np.ndarray, TokenEventFit, np.ndarray | None, np.ndarray | None]:

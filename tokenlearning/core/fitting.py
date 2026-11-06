@@ -1,10 +1,20 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import numpy as np
 
 from tokenlearning.types import TokenEventFit
+
+
+def _format_seconds(seconds: float) -> str:
+    seconds = int(round(seconds))
+    if seconds < 60:
+        return f"{seconds}s"
+    if seconds < 3600:
+        return f"{seconds // 60}m{seconds % 60:02d}s"
+    return f"{seconds // 3600}h{seconds % 3600 // 60:02d}m"
 
 
 def smooth_loss_matrix(loss_matrix: np.ndarray, window: int) -> np.ndarray:
@@ -295,6 +305,7 @@ def _fit_chunk_plot_compatible(
         t_param = torch.nn.Parameter(torch.tensor(tau_init, dtype=torch.float32, device=device))
 
     optimizer = torch.optim.Adam([end_param, start_param, lam_param, t_param], lr=float(lr))
+    started = time.perf_counter()
     for epoch_idx in range(int(epochs)):
         optimizer.zero_grad(set_to_none=True)
         end = F.softplus(end_param)
@@ -318,7 +329,13 @@ def _fit_chunk_plot_compatible(
             torch.nn.utils.clip_grad_norm_([end_param, start_param, lam_param, t_param], float(max_grad_norm))
         optimizer.step()
         if log_every > 0 and (epoch_idx + 1) % int(log_every) == 0:
-            print(f"[plot-compatible-fit] epoch {epoch_idx + 1}/{epochs} loss={loss.item():.6f}", flush=True)
+            elapsed = time.perf_counter() - started
+            remaining = elapsed / (epoch_idx + 1) * (int(epochs) - epoch_idx - 1)
+            print(
+                f"[plot-compatible-fit] epoch {epoch_idx + 1}/{epochs} loss={loss.item():.6f} "
+                f"elapsed={_format_seconds(elapsed)} remaining~{_format_seconds(remaining)}",
+                flush=True,
+            )
 
     with torch.no_grad():
         end = F.softplus(end_param).detach().cpu().numpy().reshape(-1)

@@ -1,0 +1,60 @@
+# Reference values for `tokenlearning reproduce`, recorded from complete runs with
+# tools/record_reference_metrics.py. `quick` is the --quick setting (random 50,000
+# tokens, subset seed 0, 2,000 epochs); `full` is the paper setting in configs/.
+# A rerun matches when every value is within the tolerance below.
+
+tolerance:
+  kept_fraction:
+    abs: 0.02
+  tau_median_filtered:
+    rel: 0.03
+  mean_loss_r2:
+    abs: 0.005
+  sigmoid_rate_reconstruction_corr:
+    abs: 0.02
+step_axis_1m:
+  quick:
+    kept_fraction: 0.59906
+    tau_median_filtered: 22924.0
+    mean_loss_r2: 0.98763
+    sigmoid_rate_reconstruction_corr: 0.94555
+    n_tokens: 50000
+  full:
+    kept_fraction: 0.61173
+    tau_median_filtered: 23305.0
+    mean_loss_r2: 0.9991
+    sigmoid_rate_reconstruction_corr: 0.97806
+    n_tokens: 1000000
+d_axis_1m:
+  quick:
+    kept_fraction: 0.52518
+    tau_median_filtered: 2.0522
+    mean_loss_r2: 0.99678
+    sigmoid_rate_reconstruction_corr: 0.99751
+    n_tokens: 50000
+  full:
+    kept_fraction: 0.52541
+    tau_median_filtered: 2.4189
+    mean_loss_r2: 0.99937
+    sigmoid_rate_reconstruction_corr: 0.99548
+    n_tokens: 1000000
+m_axis_1m:
+  quick:
+    kept_fraction: 0.91308
+    tau_median_filtered: 0.47633
+    mean_loss_r2: 0.99515
+    sigmoid_rate_reconstruction_corr: 0.9904
+    n_tokens: 50000
+  full:
+    kept_fraction: 0.91215
+    tau_median_filtered: 0.49401
+    mean_loss_r2: 0.99601
+    sigmoid_rate_reconstruction_corr: 0.99031
+    n_tokens: 1000000
+synthetic_mano_uniform_validation_10k:
+  full:
+    kept_fraction: 0.6353
+    tau_median_filtered: 162650.0
+    mean_loss_r2: 0.99887
+    sigmoid_rate_reconstruction_corr: 0.98758
+    n_tokens: 10000

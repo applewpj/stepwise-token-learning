@@ -1,15 +1,52 @@
-# Token Learning Spectrum
+<h1 align="center">Smooth Scaling Laws Hide Stepwise Token Learning</h1>
 
-Code and public loss matrices for decomposing smooth scaling laws into
-token-level learning events, learning-time spectra, and spectrum-dominated loss
-rate reconstructions.
+<p align="center"><strong>Token-level learning events form a learning-time
+spectrum that explains the smooth power-law improvement of aggregate
+loss.</strong></p>
 
-This repository accompanies the paper:
+<p align="center">
+  <a href="https://neurips.cc/Conferences/2026"><img src="https://img.shields.io/badge/NeurIPS-2026-4B44CE?style=flat-square" alt="NeurIPS 2026"></a>
+  <a href="https://openreview.net/pdf?id=THZDVZArRH"><img src="https://img.shields.io/badge/Paper-PDF-B31B1B?style=flat-square&amp;logo=adobeacrobatreader&amp;logoColor=white" alt="Paper PDF"></a>
+  <a href="https://openreview.net/forum?id=THZDVZArRH"><img src="https://img.shields.io/badge/OpenReview-Discussion-8C1B13?style=flat-square" alt="OpenReview"></a>
+  <a href="https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"><img src="https://img.shields.io/badge/Hugging_Face-Dataset-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=black" alt="Hugging Face Dataset"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2EA44F?style=flat-square" alt="MIT License"></a>
+</p>
 
-> **Smooth Scaling Laws Hide Stepwise Token Learning**
-> Pingjie Wang, Zechen Hu, Peiru Yang, Fu Guo, Debing Zhang. 2026.
+<p align="center">
+  Pingjie Wang &nbsp;·&nbsp; Zechen Hu &nbsp;·&nbsp; Peiru Yang
+  &nbsp;·&nbsp; Fu Guo &nbsp;·&nbsp; Debing Zhang
+</p>
 
-## What This Repository Provides
+<p align="center">
+  <a href="#cpu-quickstart">Quickstart</a> &nbsp;·&nbsp;
+  <a href="#reproducing-the-paper-results">Reproduce the Paper</a> &nbsp;·&nbsp;
+  <a href="#using-your-own-loss-matrix">Use Your Own Data</a> &nbsp;·&nbsp;
+  <a href="#documentation">Documentation</a> &nbsp;·&nbsp;
+  <a href="#citation">Citation</a>
+</p>
+
+<hr>
+
+<p align="center">
+  <img src="assets/overview.png" width="100%" alt="Token-level learning trajectories, learning-time spectra, and loss-rate reconstruction along the training-step, data-scale, and model-scale axes.">
+</p>
+
+<p align="center"><em>Individual token losses undergo localized transitions at
+different learning times. Their learning-time spectrum closely tracks—and
+reconstructs—the macroscopic loss decrease rate along the training-step T,
+data-scale D, and model-scale M axes.</em></p>
+
+## TL;DR
+
+- A contextualized token is often learned through a localized, sigmoid-like
+  loss transition characterized by its learning time `tau`.
+- The distribution of learning times, `p(tau)`, is heavy-tailed and largely
+  determines the smooth power-law decay of aggregate loss.
+- This release provides the analysis package, public loss matrices, configs,
+  and acquisition paths needed to study the phenomenon across the `T`, `D`,
+  and `M` scaling axes.
+
+## Method at a Glance
 
 Given a token-level loss matrix measured along a scaling axis `a`, the core
 package fits each contextualized token with a localized learning event:
@@ -25,7 +62,9 @@ It then estimates the learning-time spectrum `p(tau)`, binned learning pulses
 -dL/da ~= (p * g)(a)
 ```
 
-The public release includes:
+![Representative learned, early-learning, late-learning, and unlearned token loss trajectories and their learning pulses.](assets/token_learning_events.png)
+
+The public release contains:
 
 - `tokenlearning/`: loss loading, sigmoid fitting, filtering, spectrum
   estimation, reconstruction, and plotting.
@@ -36,26 +75,43 @@ The public release includes:
 - `loss_acquisition/`: optional public-safe paths for producing analyzable
   `losses.npz` files from synthetic Mano runs or SGLang checkpoint scoring.
 
-The release does **not** include private model architectures, weights,
-tokenizers, raw private validation text, training data composition, experiment
-registries, or internal training infrastructure.
+See [Release Scope and Limitations](docs/release.md) for the public/private
+boundary and sanitization constraints.
 
-## Installation
+## CPU Quickstart
+
+The smallest example is a compressed 1.5 MB matrix containing loss trajectories
+for 10,000 synthetic Mano validation samples across 80 checkpoints. It is
+intended to verify the full analysis pipeline on CPU before downloading the
+larger real-data matrices.
 
 ```bash
 git clone https://github.com/applewpj/token-learning-spectrum
 cd token-learning-spectrum
-pip install -e ".[dev,hf]"
+pip install -e ".[hf]"
+python tools/download_examples.py \
+  --repo-id applewpj/token-learning-spectrum-examples \
+  --name synthetic_mano_uniform_validation_10k
+tokenlearning-run --config configs/synthetic_mano_uniform_validation_10k.yaml
 ```
 
-For core analysis only, `pip install -e ".[dev]"` is enough. The `hf` extra is
-only needed for downloading/uploading example assets.
+Successful execution writes:
 
-## Download Example Loss Matrices
+```text
+runs/synthetic_mano_uniform_validation_10k/
+  cache/
+  figures/
+  metrics.json
+```
 
-Large example `losses.npz` files are distributed through the public HuggingFace
-Dataset repo `applewpj/token-learning-spectrum-examples` instead of GitHub.
-Download them with:
+The main outputs are the raw-vs-sigmoid mean loss, token examples, the
+learning-time spectrum, binned learning pulses, and the reconstructed loss
+decrease rate. Exact runtime depends on CPU and PyTorch build; the full T/D/M
+analyses below are substantially heavier and are configured for CUDA.
+
+## Reproducing the Paper Results
+
+Download all four checksum-verified assets:
 
 ```bash
 python tools/download_examples.py \
@@ -63,51 +119,7 @@ python tools/download_examples.py \
   --all
 ```
 
-The expected assets are listed in `examples/manifest.yaml`.
-
-To upload the current local example matrices to HuggingFace:
-
-```bash
-python tools/upload_examples_to_hf.py \
-  --repo-id applewpj/token-learning-spectrum-examples \
-  --dry-run
-
-python tools/upload_examples_to_hf.py \
-  --repo-id applewpj/token-learning-spectrum-examples
-```
-
-The upload script verifies file sizes and SHA256 checksums before uploading.
-
-## Quickstart
-
-Start with the CPU-friendly synthetic Mano example:
-
-```bash
-tokenlearning-run --config configs/synthetic_mano_uniform_validation_10k.yaml
-```
-
-The output appears under:
-
-```text
-runs/synthetic_mano_uniform_validation_10k/
-  figures/
-  cache/
-  metrics.json
-```
-
-Core figures include:
-
-- `mean_loss_raw_vs_sigmoid.png`
-- `mean_loss_by_difficulty.png`
-- `token_examples_by_tau_decile.png`
-- `token_examples_by_difficulty.png`
-- `learning_time_spectrum.png`
-- `binned_learning_pulses.png`
-- `rate_reconstruction.png`
-
-## Reproducing Paper-Axis Figures
-
-After downloading the HuggingFace example assets, run:
+Then run the axis-specific analyses:
 
 ```bash
 tokenlearning-run --config configs/step_axis_1m.yaml
@@ -115,16 +127,17 @@ tokenlearning-run --config configs/d_axis_1m.yaml
 tokenlearning-run --config configs/m_axis_1m.yaml
 ```
 
-| Paper axis | Config | Input asset | Main outputs |
-| --- | --- | --- | --- |
-| Step axis `T` | `configs/step_axis_1m.yaml` | `examples/step_axis_1m/losses.npz` | Mean loss, token examples, spectrum, binned pulses, rate reconstruction. |
-| Data axis `D` | `configs/d_axis_1m.yaml` | `examples/d_axis_1m/losses.npz` | Data-scale frontier decomposition and reconstruction. |
-| Model axis `M` | `configs/m_axis_1m.yaml` | `examples/m_axis_1m/losses.npz` | Model-scale frontier decomposition and reconstruction. |
-| Synthetic Mano | `configs/synthetic_mano_uniform_validation_10k.yaml` | `examples/synthetic_mano_uniform_validation_10k/losses.npz` | Overall and difficulty-conditioned learning spectra. |
+| Paper result | Config | Public input | Scale | Device | Primary outputs |
+| --- | --- | --- | ---: | --- | --- |
+| Figure 3: training-step axis `T` | [`step_axis_1m.yaml`](configs/step_axis_1m.yaml) | [Step-axis matrix](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples/blob/main/examples/step_axis_1m/losses.npz) | 1M × 54, 196.7 MB | CUDA | Mean loss, token events, spectrum, pulses, rate reconstruction |
+| Figure 4: data-scale axis `D` | [`d_axis_1m.yaml`](configs/d_axis_1m.yaml) | [Data-axis matrix](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples/blob/main/examples/d_axis_1m/losses.npz) | 1M × 50, 183.0 MB | CUDA | Frontier decomposition and rate reconstruction |
+| Figure 5: model-scale axis `M` | [`m_axis_1m.yaml`](configs/m_axis_1m.yaml) | [Model-axis matrix](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples/blob/main/examples/m_axis_1m/losses.npz) | 1M × 60, 219.3 MB | CUDA | Frontier decomposition and rate reconstruction |
+| Appendix: synthetic Mano | [`synthetic_mano_uniform_validation_10k.yaml`](configs/synthetic_mano_uniform_validation_10k.yaml) | [Synthetic matrix](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples/blob/main/examples/synthetic_mano_uniform_validation_10k/losses.npz) | 10K × 80, 1.5 MB | CPU | Difficulty-conditioned loss, spectrum, pulses, reconstruction |
 
-The T/D/M configs fit 1M-token matrices and are intended for CUDA. They default
-to the same analysis settings used for the public figures; expect substantially
-longer runtime on CPU.
+The complete artifact-to-output mapping, expected files, numerical checks, and
+hardware notes are documented in
+[`docs/reproduction.md`](docs/reproduction.md). File sizes and SHA256 checksums
+are recorded in [`examples/manifest.yaml`](examples/manifest.yaml).
 
 ## Input Format
 
@@ -175,7 +188,7 @@ fitted_loss_mean
 
 It intentionally does not expose BIC-based fields.
 
-## Producing Your Own `losses.npz`
+## Using Your Own Loss Matrix
 
 The core package is loss-source agnostic. Acquisition code lives outside
 `tokenlearning/`:
@@ -208,30 +221,31 @@ public `HuggingFaceTB/SmolLM2-135M` model. For private checkpoints, copy the
 config and replace the model/checkpoint paths while keeping private code and
 weights outside this repository.
 
+For a minimal custom NPZ, YAML configuration, validation checklist, and output
+interpretation, see [`docs/own-data.md`](docs/own-data.md).
+
 ## Repository Layout
 
 ```text
 tokenlearning/                         Core analysis package.
 configs/                               YAML analysis configs.
 examples/                              HF asset manifest and example docs.
+assets/                                README figures from the paper.
+docs/                                  Reproduction and user guides.
 loss_acquisition/synthetic_mano/       Public synthetic Mano acquisition path.
 loss_acquisition/llm_pretraining_sglang/ SGLang checkpoint-loss acquisition.
 tools/                                 HF asset and release-check utilities.
 tests/                                 Unit tests.
 ```
 
-## Release Hygiene
+## Documentation
 
-Before pushing to GitHub:
-
-```bash
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q
-python tools/check_release.py
-```
-
-Do not commit `runs/`, `__pycache__/`, `.pytest_cache/`, private checkpoints, or
-large `examples/*/losses.npz` files. The large example matrices should live in
-the HuggingFace Dataset asset repo.
+- [Paper reproduction and expected outputs](docs/reproduction.md)
+- [Analyze your own loss matrix](docs/own-data.md)
+- [Release scope, limitations, and maintainer workflow](docs/release.md)
+- [Example asset manifest](examples/manifest.yaml)
+- [Loss acquisition pipelines](loss_acquisition/README.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## Citation
 
@@ -240,11 +254,13 @@ the HuggingFace Dataset asset repo.
   title   = {Smooth Scaling Laws Hide Stepwise Token Learning},
   author  = {Wang, Pingjie and Hu, Zechen and Yang, Peiru and Guo, Fu and Zhang, Debing},
   year    = {2026},
-  note    = {arXiv preprint},
+  journal = {Advances in Neural Information Processing Systems},
 }
 ```
 
 ## License
 
 This repository is released under the MIT License. See `THIRD_PARTY_NOTICES.md`
-for third-party assets and optional runtime dependencies.
+for third-party assets and optional runtime dependencies. The released loss
+matrices are hosted separately on
+[Hugging Face](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples).

@@ -53,6 +53,9 @@ tokenlearning-run = "tokenlearning.cli:run_main"
 Homepage = "https://github.com/applewpj/token-learning-spectrum"
 Repository = "https://github.com/applewpj/token-learning-spectrum"
 Issues = "https://github.com/applewpj/token-learning-spectrum/issues"
+Paper = "https://openreview.net/forum?id=THZDVZArRH"
+Dataset = "https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"
+Documentation = "https://github.com/applewpj/token-learning-spectrum/tree/main/docs"
 
 [tool.setuptools.packages.find]
 include = ["tokenlearning*"]

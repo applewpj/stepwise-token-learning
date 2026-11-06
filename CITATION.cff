@@ -1,7 +1,16 @@
 cff-version: 1.2.0
 message: "If you use this code or the released loss matrices, please cite the paper."
-title: "token-learning-spectrum"
+title: "Token Learning Spectrum"
 type: software
+version: "0.1.0"
+url: "https://github.com/applewpj/token-learning-spectrum"
+repository-artifact: "https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"
+abstract: "Code and public loss matrices for decomposing smooth scaling laws into token-level learning events, learning-time spectra, and spectrum-dominated loss-rate reconstructions."
+keywords:
+  - scaling laws
+  - language modeling
+  - token loss
+  - learning dynamics
 authors:
   - family-names: Wang
     given-names: Pingjie
@@ -19,6 +28,7 @@ repository-code: "https://github.com/applewpj/token-learning-spectrum"
 preferred-citation:
   type: article
   title: "Smooth Scaling Laws Hide Stepwise Token Learning"
+  url: "https://openreview.net/forum?id=THZDVZArRH"
   authors:
     - family-names: Wang
       given-names: Pingjie
@@ -31,3 +41,4 @@ preferred-citation:
     - family-names: Zhang
       given-names: Debing
   year: 2026
+  journal: "Advances in Neural Information Processing Systems"

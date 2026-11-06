@@ -8,7 +8,7 @@ loss.</strong></p>
   <a href="https://neurips.cc/Conferences/2026"><img src="https://img.shields.io/badge/NeurIPS-2026-4B44CE?style=flat-square" alt="NeurIPS 2026"></a>
   <a href="https://openreview.net/pdf?id=THZDVZArRH"><img src="https://img.shields.io/badge/Paper-PDF-B31B1B?style=flat-square&amp;logo=adobeacrobatreader&amp;logoColor=white" alt="Paper PDF"></a>
   <a href="https://openreview.net/forum?id=THZDVZArRH"><img src="https://img.shields.io/badge/OpenReview-Discussion-8C1B13?style=flat-square" alt="OpenReview"></a>
-  <a href="https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"><img src="https://img.shields.io/badge/Hugging_Face-Dataset-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=black" alt="Hugging Face Dataset"></a>
+  <a href="https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"><img src="https://img.shields.io/badge/Hugging_Face-Dataset-FFD21E?style=flat-square&amp;logo=huggingface&amp;logoColor=FFD21E" alt="Hugging Face Dataset"></a>
   <a href="https://github.com/applewpj/token-learning-spectrum/actions/workflows/ci.yml"><img src="https://github.com/applewpj/token-learning-spectrum/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2EA44F?style=flat-square" alt="MIT License"></a>
 </p>
@@ -52,22 +52,21 @@ data-scale D, and model-scale M axes.</em></p>
 Given a token-level loss matrix measured along a scaling axis $a$, the core
 package fits each contextualized token with a localized learning event:
 
-$$
-\ell_i(a)
-\approx \ell_i^{\mathrm{post}}
-+ \Delta_i \left[1-\sigma\!\left(\lambda_i(a-\tau_i)\right)\right],
-$$
+```math
+\ell_i(a) \approx \ell_i^{\mathrm{post}}
++ \Delta_i \left[1-\sigma\!\left(\lambda_i(a-\tau_i)\right)\right].
+```
 
 where $\sigma(z)=1/(1+e^{-z})$. It then estimates the learning-time spectrum
 $p(\tau)$, the centered learning pulse $g$, and the spectrum-dominated
 reconstruction:
 
-$$
+```math
 L'(a)
 := -\frac{\mathrm{d}L(a)}{\mathrm{d}a}
 \approx \int p(\tau)\,g(a-\tau)\,\mathrm{d}\tau
-= (p*g)(a).
-$$
+= (p \ast g)(a).
+```
 
 ![Representative learned, early-learning, late-learning, and unlearned token loss trajectories and their learning pulses.](assets/token_learning_events.png)
 

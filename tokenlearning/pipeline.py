@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+import yaml
 
 from tokenlearning.config import deep_get, load_config
 from tokenlearning.core.fitting import fit_token_events, loss_snr_keep_mask
@@ -16,7 +18,7 @@ from tokenlearning.core.spectrum import (
     filter_tokens,
     reconstruct_rate_spectrum_dominated,
 )
-from tokenlearning.io.loss_matrix import load_loss_npz, load_public_fit_cache, save_fit_cache
+from tokenlearning.io.loss_matrix import load_fit_settings, load_loss_npz, load_public_fit_cache, save_fit_cache
 from tokenlearning.types import LossMatrix, TokenEventFit
 from tokenlearning.viz.plots import (
     plot_binned_pulses,
@@ -40,6 +42,20 @@ def _to_builtin(value: Any) -> Any:
     if isinstance(value, np.generic):
         return value.item()
     return value
+
+
+def _r_squared(observed: np.ndarray | None, predicted: np.ndarray | None) -> float | None:
+    if observed is None or predicted is None:
+        return None
+    y = np.asarray(observed, dtype=np.float64)
+    y_hat = np.asarray(predicted, dtype=np.float64)
+    valid = np.isfinite(y) & np.isfinite(y_hat)
+    if np.sum(valid) < 2:
+        return None
+    ss_tot = float(np.sum((y[valid] - np.mean(y[valid])) ** 2))
+    if ss_tot == 0.0:
+        return None
+    return 1.0 - float(np.sum((y[valid] - y_hat[valid]) ** 2)) / ss_tot
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -91,21 +107,79 @@ def _finite_fit_mask(fit: TokenEventFit) -> np.ndarray:
     )
 
 
+def resolve_device(name: str | None) -> str:
+    """Map ``auto``/``cuda`` to the device that will actually run the fit."""
+    requested = str(name or "auto")
+    if requested == "auto" or requested.startswith("cuda"):
+        import torch
+
+        if torch.cuda.is_available():
+            return "cuda" if requested == "auto" else requested
+        return "cpu"
+    return requested
+
+
+def _subsample_rows(loss_data: LossMatrix, n_rows: int, seed: int) -> LossMatrix:
+    rows = np.sort(np.random.default_rng(seed).choice(loss_data.loss_matrix.shape[0], n_rows, replace=False))
+
+    def take(values: np.ndarray | None) -> np.ndarray | None:
+        return None if values is None else np.asarray(values)[rows]
+
+    return LossMatrix(
+        axis_values=loss_data.axis_values,
+        loss_matrix=loss_data.loss_matrix[rows],
+        axis_name=loss_data.axis_name,
+        sample_id=take(loss_data.sample_id),
+        token_pos=take(loss_data.token_pos),
+        metadata=None if loss_data.metadata is None else {k: np.asarray(v)[rows] for k, v in loss_data.metadata.items()},
+    )
+
+
+def _fit_settings_key(fit_cfg: dict[str, Any], losses_npz: Any, n_rows: int, subset: dict[str, Any] | None) -> str:
+    # Device and logging do not change the fitted parameters, so they do not invalidate a cached fit.
+    settings = {k: v for k, v in fit_cfg.items() if k not in {"device", "log_every"}}
+    payload = {"fit": settings, "losses_npz": Path(str(losses_npz)).name, "n_rows": n_rows, "subset": subset}
+    return json.dumps(_to_builtin(payload), sort_keys=True)
+
+
 def _load_inputs(
     config: dict[str, Any],
     out_dir: Path,
-) -> tuple[np.ndarray, TokenEventFit, np.ndarray | None, np.ndarray | None, LossMatrix | None]:
+) -> tuple[np.ndarray, TokenEventFit, np.ndarray | None, np.ndarray | None, LossMatrix | None, dict[str, Any]]:
     input_cfg = config.get("input", {})
     cache_dir = out_dir / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
     public_cache_path = cache_dir / "fit_params.npz"
     reuse_cache = bool(deep_get(config, "output.reuse_cache", True))
     losses_npz = input_cfg.get("losses_npz")
-    loss_data = load_loss_npz(losses_npz, axis_name=input_cfg.get("axis_name")) if losses_npz else None
+    info: dict[str, Any] = {"subset": None, "device": None, "fit_seconds": None, "fit_reused": False}
+    if not losses_npz:
+        if reuse_cache and public_cache_path.exists():
+            axis_values, fit, raw_mean, fitted_mean = load_public_fit_cache(public_cache_path)
+            info["fit_reused"] = True
+            return axis_values, fit, raw_mean, fitted_mean, None, info
+        raise ValueError("Core analysis requires input.losses_npz.")
+    loss_data = load_loss_npz(losses_npz, axis_name=input_cfg.get("axis_name"))
+
+    # With a row subset, the empirical derivative still uses the mean over every row,
+    # so the subset's spectrum is compared against the full-matrix loss curve.
+    raw_mean = np.mean(loss_data.loss_matrix, axis=0, dtype=np.float64)
+    max_tokens = input_cfg.get("max_tokens")
+    n_total = int(loss_data.loss_matrix.shape[0])
+    if max_tokens is not None and 0 < int(max_tokens) < n_total:
+        seed = int(input_cfg.get("subset_seed", 0))
+        loss_data = _subsample_rows(loss_data, int(max_tokens), seed)
+        info["subset"] = {"n_total": n_total, "n_fitted": int(max_tokens), "seed": seed}
+
+    fit_cfg = dict(config.get("fit", {}))
+    fit_cfg["device"] = resolve_device(fit_cfg.get("device"))
+    info["device"] = fit_cfg["device"]
+    settings_key = _fit_settings_key(fit_cfg, losses_npz, int(loss_data.loss_matrix.shape[0]), info["subset"])
 
     if reuse_cache and public_cache_path.exists():
-        axis_values, fit, raw_mean, fitted_mean = load_public_fit_cache(public_cache_path)
-        if loss_data is not None:
+        cached_settings = load_fit_settings(public_cache_path)
+        if cached_settings is None or cached_settings == settings_key:
+            axis_values, fit, cached_raw_mean, fitted_mean = load_public_fit_cache(public_cache_path)
             if loss_data.axis_values.shape != axis_values.shape or not np.allclose(loss_data.axis_values, axis_values):
                 raise ValueError(f"Cached axis_values in {public_cache_path} do not match {losses_npz}")
             if fit.n_tokens != loss_data.loss_matrix.shape[0]:
@@ -113,23 +187,34 @@ def _load_inputs(
                     f"Cached fit token count in {public_cache_path} does not match loaded losses: "
                     f"{fit.n_tokens} vs {loss_data.loss_matrix.shape[0]}"
                 )
-            if raw_mean is None:
-                raw_mean = np.mean(loss_data.loss_matrix.astype(np.float64), axis=0)
-        return axis_values, fit, raw_mean, fitted_mean, loss_data
+            print(f"[cache] reusing fitted parameters from {public_cache_path}", flush=True)
+            info["fit_reused"] = True
+            return axis_values, fit, cached_raw_mean if cached_raw_mean is not None else raw_mean, fitted_mean, loss_data, info
+        print(f"[cache] fit settings differ from {public_cache_path}; fitting again", flush=True)
 
-    if loss_data is not None:
-        raw_mean = np.mean(loss_data.loss_matrix.astype(np.float64), axis=0)
-        fit = fit_token_events(loss_data.axis_values, loss_data.loss_matrix, config.get("fit", {}))
-        fitted_mean = mean_sigmoid_loss(
-            loss_data.axis_values,
-            fit,
-            mask=_finite_fit_mask(fit),
-            chunk_size=int(deep_get(config, "runtime.mean_curve_chunk_size", 50000)),
-        )
-        save_fit_cache(public_cache_path, axis_values=loss_data.axis_values, fit=fit, raw_loss_mean=raw_mean, fitted_loss_mean=fitted_mean)
-        return loss_data.axis_values, fit, raw_mean, fitted_mean, loss_data
-
-    raise ValueError("Core analysis requires input.losses_npz.")
+    n_rows, n_points = loss_data.loss_matrix.shape
+    print(
+        f"[fit] {n_rows:,} tokens x {n_points} points, {int(fit_cfg.get('epochs', 0)):,} epochs on {fit_cfg['device']}",
+        flush=True,
+    )
+    start = time.perf_counter()
+    fit = fit_token_events(loss_data.axis_values, loss_data.loss_matrix, fit_cfg)
+    info["fit_seconds"] = time.perf_counter() - start
+    fitted_mean = mean_sigmoid_loss(
+        loss_data.axis_values,
+        fit,
+        mask=_finite_fit_mask(fit),
+        chunk_size=int(deep_get(config, "runtime.mean_curve_chunk_size", 50000)),
+    )
+    save_fit_cache(
+        public_cache_path,
+        axis_values=loss_data.axis_values,
+        fit=fit,
+        raw_loss_mean=raw_mean,
+        fitted_loss_mean=fitted_mean,
+        fit_settings=settings_key,
+    )
+    return loss_data.axis_values, fit, raw_mean, fitted_mean, loss_data, info
 
 
 def _get_label_array(loss_data: LossMatrix | None, field: str | None) -> np.ndarray | None:
@@ -211,8 +296,15 @@ def _apply_token_example_filters(mask: np.ndarray, fit: TokenEventFit, cfg: dict
     return result
 
 
-def run_analysis(config_path: str | Path) -> dict[str, Any]:
-    config = load_config(config_path)
+def run_analysis(config_or_path: str | Path | dict[str, Any]) -> dict[str, Any]:
+    """Run the full analysis from a YAML path or an already-loaded config mapping."""
+    started = time.perf_counter()
+    if isinstance(config_or_path, dict):
+        config = config_or_path
+        config_path = config.get("_config_path")
+    else:
+        config = load_config(config_or_path)
+        config_path = config_or_path
     out_dir = Path(deep_get(config, "output.dir", "runs/default")).resolve()
     fig_dir = out_dir / "figures"
     cache_dir = out_dir / "cache"
@@ -220,7 +312,8 @@ def run_analysis(config_path: str | Path) -> dict[str, Any]:
     cache_dir.mkdir(parents=True, exist_ok=True)
     axis_name = str(deep_get(config, "input.axis_name", "axis"))
 
-    axis_values, fit, raw_mean, fitted_mean, loss_data = _load_inputs(config, out_dir)
+    axis_values, fit, raw_mean, fitted_mean, loss_data, run_info = _load_inputs(config, out_dir)
+    subset = run_info["subset"]
     if axis_name == "axis" and loss_data is not None:
         axis_name = loss_data.axis_name
     plot_mean_loss(fig_dir / "mean_loss_raw_vs_sigmoid.png", axis_values, raw_mean, fitted_mean, axis_name=axis_name)
@@ -349,12 +442,16 @@ def run_analysis(config_path: str | Path) -> dict[str, Any]:
         recon_cfg = config.get("reconstruction", {})
         tau_range = recon_cfg.get("tau_range_for_g_mean")
         tau_range_tuple = tuple(tau_range) if tau_range is not None else None
+        denominator = int(recon_cfg.get("denominator", getattr(fit, "raw_token_count", fit.n_tokens)))
+        if subset is not None and "denominator" in recon_cfg:
+            # The configured denominator counts every row of the full matrix; rescale it to the subset.
+            denominator = max(1, round(denominator * subset["n_fitted"] / subset["n_total"]))
         reconstruction = reconstruct_rate_spectrum_dominated(
             axis_values,
             fit,
             selected_mask,
             dense_points=int(recon_cfg.get("dense_points", 999)),
-            denominator=int(recon_cfg.get("denominator", getattr(fit, "raw_token_count", fit.n_tokens))),
+            denominator=denominator,
             tau_range_for_g_mean=tau_range_tuple,
             chunk_size=int(recon_cfg.get("chunk_size", 50000)),
         )
@@ -444,8 +541,13 @@ def run_analysis(config_path: str | Path) -> dict[str, Any]:
     np.savez_compressed(cache_dir / "analysis_arrays.npz", **analysis_payload)
 
     metrics: dict[str, Any] = {
-        "config_path": str(Path(config_path).resolve()),
+        "config_path": str(Path(config_path).resolve()) if config_path else None,
         "output_dir": str(out_dir),
+        "fit_device": run_info["device"],
+        "fit_epochs": deep_get(config, "fit.epochs"),
+        "fit_reused_cache": run_info["fit_reused"],
+        "fit_seconds": run_info["fit_seconds"],
+        "subset": subset,
         "n_tokens": fit.n_tokens,
         "n_valid_tokens": int(np.sum(fit.valid_mask)),
         "n_filtered_tokens": int(np.sum(selected_mask)),
@@ -453,6 +555,8 @@ def run_analysis(config_path: str | Path) -> dict[str, Any]:
         "axis_max": float(np.max(axis_values)),
         "tau_min_filtered": float(np.min(fit.tau[selected_mask])) if np.any(selected_mask) else None,
         "tau_max_filtered": float(np.max(fit.tau[selected_mask])) if np.any(selected_mask) else None,
+        "tau_median_filtered": float(np.median(fit.tau[selected_mask])) if np.any(selected_mask) else None,
+        "mean_loss_r2": _r_squared(raw_mean, fitted_mean),
         "mean_r2_filtered": float(np.mean(fit.r2[selected_mask])) if np.any(selected_mask) else None,
         "sampled_token_indices": sampled_indices,
         "sampled_token_indices_by_label": label_sampled_indices,
@@ -494,5 +598,8 @@ def run_analysis(config_path: str | Path) -> dict[str, Any]:
             metrics["sigmoid_rate_reconstruction_mae"] = float(
                 np.mean(np.abs(sigmoid_rate[valid] - reconstructed_rate[valid]))
             )
+    metrics["total_seconds"] = time.perf_counter() - started
     _write_json(out_dir / "metrics.json", metrics)
+    resolved = {k: v for k, v in config.items() if not str(k).startswith("_")}
+    (out_dir / "config.yaml").write_text(yaml.safe_dump(_to_builtin(resolved), sort_keys=False), encoding="utf-8")
     return metrics

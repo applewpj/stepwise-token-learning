@@ -1,0 +1,43 @@
+# Starting point for your own loss matrix (see docs/own-data.md):
+#   cp configs/template.yaml configs/mine.yaml        # then set input.losses_npz and output.dir
+#   tokenlearning run --config configs/mine.yaml --max-tokens 50000
+
+input:
+  losses_npz: path/to/my_losses.npz
+  axis_name: training step
+
+output:
+  dir: runs/mine
+  reuse_cache: true
+
+fit:
+  epochs: 2000
+  lr: 0.03
+  chunk_size: 8192
+  device: auto          # cuda when available, otherwise cpu
+  constrain_tau: true
+  seed: 1234
+
+filters:
+  require_positive_delta: true
+  min_abs_delta: 0.01
+  min_r2: 0.0
+
+spectrum:
+  bins: 80
+  binning: uniform
+  curve: pos_mass
+
+pulse:
+  tau_bins: 40
+  binning: uniform
+  align_to_tau: false
+  offset_grid_points: 401
+  chunk_size: 50000
+
+rate:
+  normalize_by_axis: true
+
+reconstruction:
+  dense_points: 401
+  chunk_size: 50000

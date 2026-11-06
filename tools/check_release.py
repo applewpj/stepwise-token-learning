@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 from pathlib import Path
 
 
@@ -19,7 +20,7 @@ PRIVATE_PATTERNS = [
 
 
 def iter_text_files() -> list[Path]:
-    skip_parts = {".git", ".pytest_cache", "__pycache__", "runs", ".venv"}
+    skip_parts = {".git", ".pytest_cache", "__pycache__", "runs", ".venv", ".cache"}
     skip_names = {"memory.md"}
     skip_paths = {Path("tools/check_release.py")}
     files: list[Path] = []
@@ -33,10 +34,24 @@ def iter_text_files() -> list[Path]:
             continue
         if rel.name in skip_names:
             continue
-        if path.suffix in {".npz", ".npy", ".pyc", ".png", ".pdf"}:
+        if path.suffix in {".npz", ".npy", ".pyc", ".png", ".pdf", ".webp", ".jpg", ".jpeg", ".gif", ".parquet"}:
             continue
         files.append(path)
     return files
+
+
+def iter_publishable_files() -> list[Path]:
+    """Files a push would include: tracked, or untracked and not ignored (downloaded matrices are ignored)."""
+    try:
+        listing = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+        ).stdout.decode("utf-8")
+    except (OSError, subprocess.CalledProcessError):
+        return [path for path in REPO_ROOT.rglob("*") if path.is_file()]
+    return [REPO_ROOT / name for name in listing.split("\0") if name and (REPO_ROOT / name).is_file()]
 
 
 def main() -> None:
@@ -59,8 +74,8 @@ def main() -> None:
         if not (REPO_ROOT / rel).exists():
             problems.append(f"missing required release file: {rel}")
     if args.fail_on_large_github_files:
-        for path in REPO_ROOT.rglob("*"):
-            if path.is_file() and path.stat().st_size > 100 * 1024 * 1024:
+        for path in iter_publishable_files():
+            if path.stat().st_size > 100 * 1024 * 1024:
                 problems.append(f"large file over 100MB: {path.relative_to(REPO_ROOT)}")
     if problems:
         for problem in problems:

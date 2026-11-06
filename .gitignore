@@ -5,10 +5,12 @@ __pycache__/
 build/
 dist/
 .venv/
+.cache/
 runs/
 memory.md
 loss_acquisition/synthetic_mano/runs/
 loss_acquisition/llm_pretraining_sglang/runs/
 examples/*/losses.npz
+examples/previews/
 loss_acquisition/llm_pretraining_sglang/data/**/*.jsonl
 !loss_acquisition/llm_pretraining_sglang/data/hf_smollm2_smoke/validation.jsonl

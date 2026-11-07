@@ -1,8 +1,9 @@
 # Reproduction Notes
 
 The [README](../README.md#reproduce-the-paper) has the commands. This page
-records what each paper config does, what `--quick` changes, how the reference
-numbers were produced, and what the release does not cover.
+records what each paper config does, what `--quick` changes, the numbers to
+expect and which file is which paper panel, how the reference numbers were
+produced, and what the release does not cover.
 
 ## Settings of the paper configs
 
@@ -38,6 +39,36 @@ subset comparable to the full matrix:
 `--max-tokens N`, `--epochs E`, and `--seed S` give other subsets. They are
 reported as `custom` runs and are not checked against the reference.
 
+## Expected numbers
+
+| Target | Setting | Tokens kept | Median τ of kept tokens | Mean-loss R² | corr(spectrum-dominated, sigmoid-implied) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `fig3` | `--quick` | 59.9% | 22,924 steps | 0.9876 | 0.946 |
+| `fig3` | paper | 61.2% | 23,305 steps | 0.9991 | 0.978 |
+| `fig4` | `--quick` | 52.5% | 2.05B tokens | 0.9968 | 0.998 |
+| `fig4` | paper | 52.5% | 2.42B tokens | 0.9994 | 0.995 |
+| `fig5` | `--quick` | 91.3% | 0.476 GFLOPs/token | 0.9952 | 0.990 |
+| `fig5` | paper | 91.2% | 0.494 GFLOPs/token | 0.9960 | 0.990 |
+| `synthetic` | paper | 63.5% | 162,650 steps | 0.9989 | 0.988 |
+
+The last column is the central check of the paper. Replacing every token's own
+learning pulse with one shared pulse, placed at the measured learning times
+(the *spectrum-dominated* derivative), barely changes the loss derivative
+implied by the per-token fits.
+
+## Which file is which panel
+
+| Paper panel | File in `runs/<id>/figures/` |
+| --- | --- |
+| 3A, 4B, 5B: measured and sigmoid-implied mean loss | `mean_loss_raw_vs_sigmoid.png` |
+| 3B: binned learning pulses | `binned_learning_pulses.png` |
+| 3C, insets of 4C and 5C: learning-time spectrum | `learning_time_spectrum.png` |
+| 3D, 4C, 5C: empirical, sigmoid-implied, and spectrum-dominated derivative | `rate_reconstruction.png`, `rate_reconstruction_loglog.png` |
+| Sampled tokens with their fits (not a paper panel) | `token_examples_by_tau_decile.png` |
+
+`tokenlearning reproduce` also prints this mapping for the figure it ran, with
+the path of the paper's version in `assets/`.
+
 ## Reference numbers
 
 [`configs/reference_metrics.yaml`](../configs/reference_metrics.yaml) holds the
@@ -55,9 +86,10 @@ They were recorded on CPU (AMD EPYC 7K62, 16 vCPUs; Python 3.12, PyTorch
 unmodified configs.
 `metrics.json` additionally reports `rate_reconstruction_corr`, the correlation
 between the empirical and spectrum-dominated derivatives. It is not used as a
-check, because the empirical derivative is a finite difference of a noisy
-curve. Judge that agreement from `rate_reconstruction_loglog.png`, as in the
-paper.
+check, because the empirical derivative is a finite difference between
+neighboring checkpoints and is noisy, especially along M, where adjacent models
+are only a few percent apart in FLOPs. Judge that agreement from
+`rate_reconstruction_loglog.png`, as in the paper.
 
 ## Determinism and tolerances
 

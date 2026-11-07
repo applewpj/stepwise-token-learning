@@ -51,6 +51,22 @@ determined, because tokens learned before the first point pile up there and
 steps cut off by the last point are fitted from half a transition. `AXES` also
 holds the irreducible loss E of each power-law fit, as in the paper's figures.
 
+## README and Dataset Card Images
+
+`assets/readme/` holds the banner, the link buttons, and the animated preview
+of the mechanism toy that the README and the dataset card show. They are drawn
+in the style of the project page:
+
+```bash
+tokenlearning reproduce fig3            # the banner plots tokens from the paper-setting fit
+python tools/make_readme_assets.py      # all images; --only banner, buttons, or preview
+```
+
+The preview replays `docs/static/js/toy.js` through a Python port with the
+page's seed and default sliders. If the toy changes, change the port with it.
+The dataset card loads these images from `main` on GitHub, so push them before
+the card.
+
 ## Publishing Example Data (Maintainers)
 
 To add or update a released matrix:

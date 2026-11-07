@@ -38,16 +38,19 @@ configs:
         path: previews/axes.parquet
 ---
 
-# Token Learning Spectrum: Token-Level Loss Trajectories
-
-<p>
-  <a href="https://openreview.net/forum?id=THZDVZArRH"><img src="https://img.shields.io/badge/NeurIPS%202026-Spotlight-4B44CE?style=flat-square" alt="NeurIPS 2026 Spotlight"></a>
-  <a href="https://openreview.net/pdf?id=THZDVZArRH"><img src="https://img.shields.io/badge/Paper-OpenReview-8C1B13?style=flat-square" alt="Paper on OpenReview"></a>
-  <a href="https://github.com/applewpj/stepwise-token-learning"><img src="https://img.shields.io/badge/Code-GitHub-181717?style=flat-square&amp;logo=github" alt="Code on GitHub"></a>
-  <a href="https://applewpj.github.io/stepwise-token-learning/"><img src="https://img.shields.io/badge/Project-Page-1F6FEB?style=flat-square" alt="Project page"></a>
-  <a href="https://colab.research.google.com/github/applewpj/stepwise-token-learning/blob/main/notebooks/quickstart.ipynb"><img src="https://img.shields.io/badge/Colab-Quickstart-F9AB00?style=flat-square&amp;logo=googlecolab&amp;logoColor=white" alt="Open the quickstart in Colab"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2EA44F?style=flat-square" alt="MIT License"></a>
+<p align="center">
+  <a href="https://applewpj.github.io/stepwise-token-learning/"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/banner.png" width="100%" alt="Smooth Scaling Laws Hide Stepwise Token Learning, NeurIPS 2026 Spotlight. Each token's loss falls in one sigmoid-shaped step, and their average is the smooth loss curve."></a>
 </p>
+
+<p align="center">
+  <a href="https://applewpj.github.io/stepwise-token-learning/"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-page.svg" alt="Interactive project page"></a>
+  <a href="https://openreview.net/forum?id=THZDVZArRH"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-paper.svg" alt="Paper on OpenReview"></a>
+  <a href="https://github.com/applewpj/stepwise-token-learning"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-code.svg" alt="Code on GitHub"></a>
+  <a href="https://colab.research.google.com/github/applewpj/stepwise-token-learning/blob/main/notebooks/quickstart.ipynb"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-colab.svg" alt="Quickstart in Colab"></a>
+  <a href="#citation"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-bibtex.svg" alt="BibTeX"></a>
+</p>
+
+# Token Learning Spectrum: Token-Level Loss Trajectories
 
 Per-token validation-loss trajectories for **one million contextualized tokens**
 along each of three scaling axes of LLM pre-training (training steps *T*, data
@@ -56,10 +59,31 @@ inputs to the analysis in
 **[Smooth Scaling Laws Hide Stepwise Token Learning](https://openreview.net/forum?id=THZDVZArRH)**
 (NeurIPS 2026, Spotlight).
 
+> **See these trajectories move.** The
+> [interactive project page](https://applewpj.github.io/stepwise-token-learning/)
+> plots tokens from these matrices, shows how they add up to the loss curve,
+> and lets you play with the mechanism. The
+> [code on GitHub](https://github.com/applewpj/stepwise-token-learning)
+> downloads these files and reproduces every figure with one command.
+
+## What the Matrices Show
+
 Each row is one contextualized token, and each column is a checkpoint or a run
-along the scaling axis. Individual rows drop in localized, sigmoid-like steps at
-different *learning times*; the distribution of those times, the learning-time
-spectrum, is what shapes the smooth power law of the averaged loss.
+along the scaling axis *a*. Individual rows drop in localized, sigmoid-like
+steps, which the paper fits with one learning event per token:
+
+$$
+\ell_i(a) \approx \ell_i^{\mathrm{post}} + \Delta_i \left[ 1 - \sigma\big( \lambda_i (a - \tau_i) \big) \right]
+$$
+
+Here τ is when the token is learned, λ how abruptly, and Δ how much loss it
+sheds. The learning pulses share one shape *g*, so the slope of the averaged
+loss *L* is the distribution of learning times, the learning-time spectrum
+*p*(τ), smoothed by *g*:
+
+$$
+-\frac{\mathrm{d}L}{\mathrm{d}a} \approx \int p(\tau) \thinspace g(a - \tau) \thinspace \mathrm{d}\tau
+$$
 
 ![Token-level loss trajectories and the learning-time spectrum along training steps, data scale, and model scale.](https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/overview.png)
 
@@ -185,6 +209,6 @@ along scaling axes.
 
 ## License and Contact
 
-The matrices are released under the MIT License. Questions and issues are
-welcome on the
+The matrices are released under the [MIT License](LICENSE). Questions and
+issues are welcome on the
 [GitHub issue tracker](https://github.com/applewpj/stepwise-token-learning/issues).

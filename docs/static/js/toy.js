@@ -363,7 +363,12 @@
       });
       P.el("path", { d: P.linePath(curveX, curve, sx, sy), fill: "none", stroke: C.ink, "stroke-width": 1.4, "stroke-dasharray": "4 3" }, frame.data);
       const lx = sx(curveX[30]) + 6;
-      P.text(frame.over, lx, sy(curve[30]) - 4, "p(\u03c4) \u221d \u03c4\u207b\u1d45", { fill: C.ink, "font-size": 11, "font-style": "italic", stroke: "#fff", "stroke-width": 3.5, "paint-order": "stroke" });
+      let ly = sy(curve[30]) - 4;
+      // A near-flat spectrum puts the label in the top row, on the share learned; drop it under the curve.
+      if (ly < box.y + 30) {
+        ly += 18;
+      }
+      P.text(frame.over, lx, ly, "p(\u03c4) \u221d \u03c4\u207b\u1d45", { fill: C.ink, "font-size": 11, "font-style": "italic", stroke: "#fff", "stroke-width": 3.5, "paint-order": "stroke" });
       let learned = 0;
       for (let i = 0; i < sim.tau.length; i++) {
         learned += sim.tau[i] <= a ? 1 : 0;

@@ -13,6 +13,12 @@ manuscript for display on GitHub and Hugging Face:
 | `reshape.png` | Figure 6: static reshaping with measured learning times |
 | `predictive_reshaping.png` | Figure 7: dynamic predictive reshaping |
 
+`readme/` holds the images of the README and the dataset card, drawn by
+`tools/make_readme_assets.py` in the style of the project page: `banner.png`
+(the curves are the same 46 tokens as in the social preview below),
+`btn-*.svg` (link buttons, 40 px tall, with the labels as outlines), and `mechanism.gif` (a preview of
+the page's mechanism toy, with its seed and default sliders).
+
 `social_preview.png` (1280 × 640) is the repository's social preview card and the
 project page's link preview. Its colored curves are normalized sigmoid fits of
 46 tokens from the paper-setting reproduction of Figure 3 (`step_axis_1m`),

@@ -209,6 +209,7 @@ along scaling axes.
 
 ## License and Contact
 
-The matrices are released under the [MIT License](LICENSE). Questions and
-issues are welcome on the
+The matrices are released under the
+[MIT License](https://huggingface.co/datasets/applewpj/stepwise-token-learning/blob/main/LICENSE).
+Questions and issues are welcome on the
 [GitHub issue tracker](https://github.com/applewpj/stepwise-token-learning/issues).

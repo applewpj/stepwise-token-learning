@@ -19,7 +19,7 @@
 <p>
   <a href="https://applewpj.github.io/stepwise-token-learning/"><img src="assets/readme/btn-page.svg" alt="Interactive project page"></a>
   <a href="https://openreview.net/forum?id=THZDVZArRH"><img src="assets/readme/btn-paper.svg" alt="Paper on OpenReview"></a>
-  <a href="https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"><img src="assets/readme/btn-data.svg" alt="Loss matrices on Hugging Face"></a>
+  <a href="https://huggingface.co/datasets/applewpj/stepwise-token-learning"><img src="assets/readme/btn-data.svg" alt="Loss matrices on Hugging Face"></a>
   <a href="https://colab.research.google.com/github/applewpj/stepwise-token-learning/blob/main/notebooks/quickstart.ipynb"><img src="assets/readme/btn-colab.svg" alt="Quickstart in Colab"></a>
   <a href="#citation"><img src="assets/readme/btn-bibtex.svg" alt="BibTeX"></a>
 </p>
@@ -35,7 +35,7 @@
 > **Explore it interactively.** The [project page](https://applewpj.github.io/stepwise-token-learning/)
 > lets you browse real token trajectories along training steps, data, and model size, watch them add up
 > to the loss curve, and play with the mechanism toy shown below. The loss matrices behind every figure
-> are on [Hugging Face](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples), and
+> are on [Hugging Face](https://huggingface.co/datasets/applewpj/stepwise-token-learning), and
 > this repository downloads them for you.
 
 ## TL;DR
@@ -169,7 +169,7 @@ HF_ENDPOINT=https://hf-mirror.com tokenlearning download fig3
 ```
 
 To download manually, get `examples/<id>/losses.npz` from the
-[dataset page](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples/tree/main/examples)
+[dataset page](https://huggingface.co/datasets/applewpj/stepwise-token-learning/tree/main/examples)
 and put it at the same path in your clone. `tokenlearning download --list` shows what is present.
 </details>
 

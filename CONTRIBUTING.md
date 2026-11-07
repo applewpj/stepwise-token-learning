@@ -23,7 +23,7 @@ composition, internal experiment registries, local environments, or run outputs
 patterns and fails on files over 100 MB.
 
 Large `losses.npz` files belong in the
-[Hugging Face dataset](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples),
+[Hugging Face dataset](https://huggingface.co/datasets/applewpj/stepwise-token-learning),
 not in this repository.
 
 ## Project Page
@@ -90,10 +90,10 @@ To add or update a released matrix:
 
    ```bash
    python tools/upload_examples_to_hf.py \
-     --repo-id applewpj/token-learning-spectrum-examples \
+     --repo-id applewpj/stepwise-token-learning \
      --dry-run
    python tools/upload_examples_to_hf.py \
-     --repo-id applewpj/token-learning-spectrum-examples
+     --repo-id applewpj/stepwise-token-learning
    ```
 
    The upload tool verifies sizes and checksums, then uploads the matrices,

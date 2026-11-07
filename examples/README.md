@@ -1,7 +1,7 @@
 # Example Loss Matrices
 
 The paper's analysis inputs are released as four `losses.npz` matrices in the
-[Hugging Face dataset](https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples).
+[Hugging Face dataset](https://huggingface.co/datasets/applewpj/stepwise-token-learning).
 They are not committed to GitHub; this directory holds their manifest and the
 dataset card.
 
@@ -34,7 +34,7 @@ synthetic matrix):
 ```python
 from datasets import load_dataset
 
-preview = load_dataset("applewpj/token-learning-spectrum-examples", "step_axis_1m", split="preview")
+preview = load_dataset("applewpj/stepwise-token-learning", "step_axis_1m", split="preview")
 ```
 
 ## Provenance

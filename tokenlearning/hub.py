@@ -8,7 +8,7 @@ from typing import Any
 
 import yaml
 
-DEFAULT_REPO_ID = "applewpj/token-learning-spectrum-examples"
+DEFAULT_REPO_ID = "applewpj/stepwise-token-learning"
 MANIFEST_RELPATH = Path("examples") / "manifest.yaml"
 
 

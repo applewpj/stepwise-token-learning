@@ -1,6 +1,6 @@
 ---
 license: mit
-pretty_name: "Token Learning Spectrum: Token-Level Loss Trajectories Along Scaling Axes"
+pretty_name: "Stepwise Token Learning: Token-Level Loss Trajectories Along Scaling Axes"
 task_categories:
   - text-generation
 tags:
@@ -50,7 +50,7 @@ configs:
   <a href="#citation"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-bibtex.svg" alt="BibTeX"></a>
 </p>
 
-# Token Learning Spectrum: Token-Level Loss Trajectories
+# Stepwise Token Learning: Token-Level Loss Trajectories
 
 Per-token validation-loss trajectories for **one million contextualized tokens**
 along each of three scaling axes of LLM pre-training (training steps *T*, data
@@ -109,7 +109,7 @@ Browse a preview with 🤗 Datasets:
 ```python
 from datasets import load_dataset
 
-repo = "applewpj/token-learning-spectrum-examples"
+repo = "applewpj/stepwise-token-learning"
 preview = load_dataset(repo, "step_axis_1m", split="preview")   # columns: row, loss[54]
 axes = load_dataset(repo, "axes", split="full")                 # axis values per asset
 ```
@@ -121,7 +121,7 @@ import numpy as np
 from huggingface_hub import hf_hub_download
 
 path = hf_hub_download(
-    repo_id="applewpj/token-learning-spectrum-examples",
+    repo_id="applewpj/stepwise-token-learning",
     repo_type="dataset",
     filename="examples/step_axis_1m/losses.npz",
 )

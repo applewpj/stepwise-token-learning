@@ -5,7 +5,7 @@ type: software
 version: "0.1.0"
 url: "https://applewpj.github.io/stepwise-token-learning/"
 repository-code: "https://github.com/applewpj/stepwise-token-learning"
-repository-artifact: "https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"
+repository-artifact: "https://huggingface.co/datasets/applewpj/stepwise-token-learning"
 abstract: "Code and public loss matrices for decomposing smooth scaling laws into token-level learning events, learning-time spectra, and spectrum-dominated reconstructions of the loss derivative."
 keywords:
   - scaling laws

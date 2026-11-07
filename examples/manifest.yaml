@@ -1,7 +1,7 @@
 version: 1
 repo_type: dataset
-recommended_repo_name: token-learning-spectrum-examples
-description: Public loss matrices for reproducing Token Learning Spectrum figures.
+recommended_repo_name: stepwise-token-learning
+description: Public loss matrices for reproducing the Stepwise Token Learning figures.
 
 files:
   - id: step_axis_1m

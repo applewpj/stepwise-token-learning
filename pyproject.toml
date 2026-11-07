@@ -63,7 +63,7 @@ Homepage = "https://applewpj.github.io/stepwise-token-learning/"
 Repository = "https://github.com/applewpj/stepwise-token-learning"
 Issues = "https://github.com/applewpj/stepwise-token-learning/issues"
 Paper = "https://openreview.net/forum?id=THZDVZArRH"
-Dataset = "https://huggingface.co/datasets/applewpj/token-learning-spectrum-examples"
+Dataset = "https://huggingface.co/datasets/applewpj/stepwise-token-learning"
 Documentation = "https://github.com/applewpj/stepwise-token-learning/tree/main/docs"
 Quickstart = "https://colab.research.google.com/github/applewpj/stepwise-token-learning/blob/main/notebooks/quickstart.ipynb"
 

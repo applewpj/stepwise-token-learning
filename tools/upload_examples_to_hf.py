@@ -54,7 +54,7 @@ def verify_local_files(manifest: dict[str, Any]) -> list[dict[str, Any]]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Upload example losses.npz files to a HuggingFace Dataset repo.")
-    parser.add_argument("--repo-id", required=True, help="HuggingFace dataset repo id, e.g. applewpj/token-learning-spectrum-examples")
+    parser.add_argument("--repo-id", required=True, help="HuggingFace dataset repo id, e.g. applewpj/stepwise-token-learning")
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
     parser.add_argument("--dataset-card", default=str(DEFAULT_DATASET_CARD))
     parser.add_argument(

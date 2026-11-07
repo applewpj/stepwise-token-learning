@@ -43,11 +43,11 @@ configs:
 </p>
 
 <p align="center">
-  <a href="https://applewpj.github.io/stepwise-token-learning/"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-page.svg" alt="Interactive project page"></a>
-  <a href="https://openreview.net/forum?id=THZDVZArRH"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-paper.svg" alt="Paper on OpenReview"></a>
-  <a href="https://github.com/applewpj/stepwise-token-learning"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-code.svg" alt="Code on GitHub"></a>
-  <a href="https://colab.research.google.com/github/applewpj/stepwise-token-learning/blob/main/notebooks/quickstart.ipynb"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-colab.svg" alt="Quickstart in Colab"></a>
-  <a href="#citation"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-bibtex.svg" alt="BibTeX"></a>
+  <a href="https://applewpj.github.io/stepwise-token-learning/" style="display: inline-block; margin: 3px;"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-page.svg" alt="Interactive project page" style="display: inline-block; vertical-align: middle; margin: 0;"></a>
+  <a href="https://openreview.net/forum?id=THZDVZArRH" style="display: inline-block; margin: 3px;"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-paper.svg" alt="Paper on OpenReview" style="display: inline-block; vertical-align: middle; margin: 0;"></a>
+  <a href="https://github.com/applewpj/stepwise-token-learning" style="display: inline-block; margin: 3px;"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-code.svg" alt="Code on GitHub" style="display: inline-block; vertical-align: middle; margin: 0;"></a>
+  <a href="https://colab.research.google.com/github/applewpj/stepwise-token-learning/blob/main/notebooks/quickstart.ipynb" style="display: inline-block; margin: 3px;"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-colab.svg" alt="Quickstart in Colab" style="display: inline-block; vertical-align: middle; margin: 0;"></a>
+  <a href="#citation" style="display: inline-block; margin: 3px;"><img src="https://raw.githubusercontent.com/applewpj/stepwise-token-learning/main/assets/readme/btn-bibtex.svg" alt="BibTeX" style="display: inline-block; vertical-align: middle; margin: 0;"></a>
 </p>
 
 # Stepwise Token Learning: Token-Level Loss Trajectories
